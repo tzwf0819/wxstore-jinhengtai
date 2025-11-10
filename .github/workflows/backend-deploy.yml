@@ -11,35 +11,40 @@ on:
 jobs:
   deploy-backend:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
       with:
-        node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: backend/package.json
-        
-    - name: Install and build backend
+        python-version: '3.11'
+        cache: 'pip'
+        cache-dependency-path: backend/requirements.txt
+
+    - name: Install dependencies
+      working-directory: ./backend
       run: |
-        cd backend
-        npm ci
-        npm run build
-        
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run tests
+      working-directory: ./backend
+      run: |
+        pytest
+
     - name: Create deployment package
+      working-directory: ./backend
       run: |
-        cd backend
         tar -czf ../backend-deploy.tar.gz \
-          --exclude=node_modules \
-          --exclude=dist \
+          --exclude=__pycache__ \
+          --exclude=.venv \
           --exclude=.env \
-          --exclude=test-server.js \
-          --exclude=src/app-simple.ts \
+          --exclude=tests \
+          --exclude=*.pyc \
           .
-          
+
     - name: Deploy backend to cloud host
       uses: appleboy/scp-action@v0.1.7
       with:
@@ -47,10 +52,10 @@ jobs:
         username: ${{ secrets.JINHENGTAI_USERNAME }}
         password: ${{ secrets.JINHENGTAI_PASSWORD }}
         port: 22
-        source: "backend-deploy.tar.gz,database/schema.sql"
+        source: "backend-deploy.tar.gz"
         target: "/tmp/"
         strip_components: 0
-        
+
     - name: Setup backend on server
       uses: appleboy/ssh-action@v1.0.0
       with:
@@ -60,109 +65,78 @@ jobs:
         port: 22
         timeout: 600s
         script: |
-          # 设置变量
           PROJECT_DIR="/opt/cloudbase"
           BACKEND_DIR="$PROJECT_DIR/backend"
           TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-          
+
           echo "Starting backend deployment at $TIMESTAMP"
-          
-          # 创建目录
+
           sudo mkdir -p $PROJECT_DIR
           sudo mkdir -p $BACKEND_DIR
           sudo mkdir -p $PROJECT_DIR/logs
           sudo mkdir -p $PROJECT_DIR/uploads
-          
-          # 备份现有后端
+
           if [ -d "$BACKEND_DIR" ]; then
             echo "Backing up existing backend..."
             sudo mkdir -p /opt/cloudbase/backup
             sudo cp -r $BACKEND_DIR /opt/cloudbase/backup/backend_$TIMESTAMP
           fi
-          
-          # 解压新版本
+
           echo "Extracting new backend..."
           cd /tmp
-          sudo tar -xzf backend-deploy.tar.gz -C $BACKEND_DIR
-          
-          # 安装依赖
-          echo "Installing dependencies..."
+          sudo tar -xzf backend-deploy.tar.gz -C $BACKEND_DIR --strip-components=1
+
+          echo "Creating Python environment..."
           cd $BACKEND_DIR
-          sudo npm ci --production
-          
-          # 创建环境配置
-          echo "Creating environment configuration..."
-          sudo tee $BACKEND_DIR/.env > /dev/null <<EOF
-# 数据库配置
-DB_HOST=${{ secrets.JINHENGTAI_DB_HOST }}
-DB_PORT=${{ secrets.JINHENGTAI_DB_PORT }}
-DB_NAME=${{ secrets.JINHENGTAI_DB_NAME }}
-DB_USER=${{ secrets.JINHENGTAI_DB_USER }}
-DB_PASSWORD=${{ secrets.JINHENGTAI_DB_PASSWORD }}
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
 
-# JWT配置
-JWT_SECRET=${{ secrets.JINHENGTAI_JWT_SECRET }}
-
-# 微信小程序配置
-WECHAT_APP_ID=${{ secrets.JINHENGTAI_WECHAT_APP_ID }}
-WECHAT_APP_SECRET=${{ secrets.JINHENGTAI_WECHAT_APP_SECRET }}
-
-# 微信支付配置
-WECHAT_MCH_ID=${{ secrets.JINHENGTAI_WECHAT_MCH_ID }}
-WECHAT_API_KEY=${{ secrets.JINHENGTAI_WECHAT_API_KEY }}
-WECHAT_CERT_PATH=${{ secrets.JINHENGTAI_WECHAT_CERT_PATH }}
-WECHAT_KEY_PATH=${{ secrets.JINHENGTAI_WECHAT_KEY_PATH }}
-
-# 服务器配置
-PORT=3000
-NODE_ENV=production
-
-# 文件上传配置
-UPLOAD_PATH=/opt/cloudbase/uploads
-MAX_FILE_SIZE=10485760
-
-# CORS配置
-CORS_ORIGIN=${{ secrets.JINHENGTAI_CORS_ORIGIN }}
+          echo "Writing environment variables..."
+          cat <<'EOF' > $BACKEND_DIR/.env
+APP_NAME=Jinhengtai Mall Backend
+DEBUG=false
+SQL_SERVER_HOST=${{ secrets.JINHENGTAI_DB_HOST }}
+SQL_SERVER_PORT=${{ secrets.JINHENGTAI_DB_PORT }}
+SQL_SERVER_USER=${{ secrets.JINHENGTAI_DB_USER }}
+SQL_SERVER_PASSWORD=${{ secrets.JINHENGTAI_DB_PASSWORD }}
+SQL_SERVER_DATABASE=${{ secrets.JINHENGTAI_DB_NAME }}
+SQL_SERVER_DRIVER=ODBC Driver 18 for SQL Server
 EOF
-          
-          # 设置权限
+
+          echo "Setting permissions..."
           sudo chown -R $USER:$USER $BACKEND_DIR
-          sudo chmod +x $BACKEND_DIR/dist/scripts/initDatabase.js
-          
-          # 构建项目
-          echo "Building project..."
-          cd $BACKEND_DIR
-          sudo npm run build
-          
-          # 初始化数据库（如果需要）
-          echo "Checking database initialization..."
-          if [ "${{ secrets.JINHENGTAI_INIT_DB }}" = "true" ]; then
-            echo "Initializing database..."
-            sudo node dist/scripts/initDatabase.js || echo "Database initialization failed, continuing..."
-          fi
-          
-          # 安装PM2（如果未安装）
-          if ! command -v pm2 &> /dev/null; then
-            echo "Installing PM2..."
-            sudo npm install -g pm2
-          fi
-          
-          # 启动后端服务
-          echo "Starting backend service..."
-          cd $BACKEND_DIR
-          sudo pm2 delete cloudbase-api 2>/dev/null || true
-          sudo pm2 start ecosystem.config.js --env production
-          sudo pm2 save
-          sudo pm2 startup
-          
-          # 设置防火墙规则
-          echo "Configuring firewall..."
-          sudo ufw allow 3000/tcp || echo "UFW not available or already configured"
-          
-          # 清理临时文件
-          echo "Cleaning up temporary files..."
+
+          echo "Creating systemd service..."
+          sudo tee /etc/systemd/system/jinhengtai-backend.service > /dev/null <<SERVICE
+[Unit]
+Description=Jinhengtai FastAPI Backend
+After=network.target
+
+[Service]
+Type=simple
+User=${{ secrets.JINHENGTAI_USERNAME }}
+WorkingDirectory=$BACKEND_DIR
+EnvironmentFile=$BACKEND_DIR/.env
+ExecStart=$BACKEND_DIR/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+SERVICE
+
+          echo "Reloading systemd and restarting service..."
+          sudo systemctl daemon-reload
+          sudo systemctl enable jinhengtai-backend.service --now
+          sudo systemctl restart jinhengtai-backend.service
+
+          echo "Cleaning up deployment package..."
           rm -f /tmp/backend-deploy.tar.gz
-          
+
+          echo "Checking service status..."
+          sudo systemctl status --no-pager jinhengtai-backend.service || true
+          sudo journalctl -u jinhengtai-backend.service -n 50 --no-pager || true
+
           echo "Backend deployment completed successfully!"
-          echo "API Service: http://${{ secrets.JINHENGTAI_HOST }}:3000"
-          echo "Health Check: http://${{ secrets.JINHENGTAI_HOST }}:3000/health"
