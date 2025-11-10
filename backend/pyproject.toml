@@ -1,0 +1,16 @@
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I", "B"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+addopts = "-s -vv"
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+branch = true
+source = ["app"]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
