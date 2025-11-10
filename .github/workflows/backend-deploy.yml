@@ -42,7 +42,7 @@ jobs:
           --exclude=.venv \
           --exclude=.env \
           --exclude=tests \
-          --exclude=*.pyc \
+          --exclude='*.pyc' \
           .
 
     - name: Deploy backend to cloud host
