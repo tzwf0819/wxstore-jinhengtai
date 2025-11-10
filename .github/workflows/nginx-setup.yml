@@ -17,21 +17,33 @@ jobs:
         port: 22
         timeout: 600s
         script: |
-          set -e
+          set -euo pipefail
 
           echo "Updating system packages..."
-          sudo apt-get update
+          if command -v apt-get >/dev/null 2>&1; then
+            sudo apt-get update
+            INSTALL_CMD="sudo apt-get install -y"
+          elif command -v dnf >/dev/null 2>&1; then
+            sudo dnf makecache
+            INSTALL_CMD="sudo dnf install -y"
+          elif command -v yum >/dev/null 2>&1; then
+            sudo yum makecache
+            INSTALL_CMD="sudo yum install -y"
+          else
+            echo "Unsupported package manager. Install Nginx manually." >&2
+            exit 1
+          fi
 
           if ! command -v nginx >/dev/null 2>&1; then
             echo "Installing Nginx..."
-            sudo apt-get install -y nginx
+            ${INSTALL_CMD} nginx
           fi
 
           echo "Writing Nginx configuration..."
           sudo tee /etc/nginx/sites-available/cloudbase > /dev/null <<'EOF'
           server {
               listen 80;
-              server_name ${JINHENGTAI_HOST};
+              server_name ${{ secrets.JINHENGTAI_HOST }};
 
               access_log /var/log/nginx/cloudbase_access.log;
               error_log /var/log/nginx/cloudbase_error.log;
@@ -97,7 +109,11 @@ jobs:
           sudo systemctl enable nginx
 
           echo "Configuring firewall..."
-          sudo ufw allow 'Nginx Full' || echo "UFW not available or already configured"
+          if command -v ufw >/dev/null 2>&1; then
+            sudo ufw allow 'Nginx Full'
+          else
+            echo "UFW not available or already configured"
+          fi
 
           echo "Nginx setup completed!"
           echo "API: http://${{ secrets.JINHENGTAI_HOST }}/api/"
