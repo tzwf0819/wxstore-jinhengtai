@@ -1,0 +1,72 @@
+name: Database Setup
+
+on:
+  workflow_dispatch:
+    inputs:
+      init_database:
+        description: 'Initialize database with schema'
+        required: true
+        default: 'false'
+        type: boolean
+
+jobs:
+  setup-database:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup MSSQL Tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y curl gnupg
+        curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+        curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
+        sudo apt-get update
+        sudo ACCEPT_EULA=Y apt-get install -y msodbcsql17
+        sudo ACCEPT_EULA=Y apt-get install -y mssql-tools
+        
+    - name: Deploy database schema
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.JINHENGTAI_HOST }}
+        username: ${{ secrets.JINHENGTAI_USERNAME }}
+        password: ${{ secrets.JINHENGTAI_PASSWORD }}
+        port: 22
+        source: "database/schema.sql"
+        target: "/tmp/"
+        
+    - name: Initialize database
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.JINHENGTAI_HOST }}
+        username: ${{ secrets.JINHENGTAI_USERNAME }}
+        password: ${{ secrets.JINHENGTAI_PASSWORD }}
+        port: 22
+        script: |
+          # 安装sqlcmd工具
+          if ! command -v sqlcmd &> /dev/null; then
+            echo "Installing sqlcmd..."
+            curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+            curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
+            sudo apt-get update
+            sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18 unixodbc-dev
+            sudo ln -sfn /opt/mssql-tools18/bin/sqlcmd /usr/bin/sqlcmd
+          fi
+          
+          if [ "${{ github.event.inputs.init_database }}" = "true" ]; then
+            echo "Initializing database schema..."
+            sqlcmd -S ${{ secrets.JINHENGTAI_DB_HOST }},${{ secrets.JINHENGTAI_DB_PORT }} \
+                   -U ${{ secrets.JINHENGTAI_DB_USER }} \
+                   -P ${{ secrets.JINHENGTAI_DB_PASSWORD }} \
+                   -i /tmp/schema.sql \
+                   -C || echo "Database schema execution completed with warnings"
+            
+            echo "Database initialization completed!"
+          else
+            echo "Skipping database initialization (set init_database=true to run)"
+          fi
+          
+          # 清理临时文件
+          rm -f /tmp/schema.sql

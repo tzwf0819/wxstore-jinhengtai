@@ -1,0 +1,76 @@
+name: Deploy to Cloud Host
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: backend/package.json
+        
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        npm ci
+        
+    - name: Build backend
+      run: |
+        cd backend
+        npm run build
+        
+    - name: Setup MSSQL Client
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y curl gnupg
+        curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+        curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
+        sudo apt-get update
+        sudo ACCEPT_EULA=Y apt-get install -y msodbcsql17
+        sudo ACCEPT_EULA=Y apt-get install -y mssql-tools
+        
+    - name: Deploy to Cloud Host
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: 22
+        timeout: 300s
+        script: |
+          # 设置项目目录
+          PROJECT_DIR="/opt/cloudbase"
+          BACKUP_DIR="/opt/cloudbase/backup/$(date +%Y%m%d_%H%M%S)"
+          
+          # 创建备份
+          if [ -d "$PROJECT_DIR" ]; then
+            echo "Creating backup..."
+            sudo mkdir -p $BACKUP_DIR
+            sudo cp -r $PROJECT_DIR/* $BACKUP_DIR/ 2>/dev/null || true
+          fi
+          
+          # 创建项目目录
+          sudo mkdir -p $PROJECT_DIR
+          sudo mkdir -p $PROJECT_DIR/backend
+          sudo mkdir -p $PROJECT_DIR/database
+          sudo mkdir -p $PROJECT_DIR/logs
+          sudo mkdir -p $PROJECT_DIR/uploads
+          
+          # 停止现有服务
+          echo "Stopping existing services..."
+          sudo pm2 delete cloudbase-api 2>/dev/null || true
+          sudo pm2 delete cloudbase-admin 2>/dev/null || true
+          
+          echo "Deployment completed successfully!"

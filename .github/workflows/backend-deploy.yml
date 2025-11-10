@@ -1,0 +1,168 @@
+name: Backend API Deployment
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+      - 'database/**'
+  workflow_dispatch:
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: backend/package.json
+        
+    - name: Install and build backend
+      run: |
+        cd backend
+        npm ci
+        npm run build
+        
+    - name: Create deployment package
+      run: |
+        cd backend
+        tar -czf ../backend-deploy.tar.gz \
+          --exclude=node_modules \
+          --exclude=dist \
+          --exclude=.env \
+          --exclude=test-server.js \
+          --exclude=src/app-simple.ts \
+          .
+          
+    - name: Deploy backend to cloud host
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.JINHENGTAI_HOST }}
+        username: ${{ secrets.JINHENGTAI_USERNAME }}
+        password: ${{ secrets.JINHENGTAI_PASSWORD }}
+        port: 22
+        source: "backend-deploy.tar.gz,database/schema.sql"
+        target: "/tmp/"
+        strip_components: 0
+        
+    - name: Setup backend on server
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.JINHENGTAI_HOST }}
+        username: ${{ secrets.JINHENGTAI_USERNAME }}
+        password: ${{ secrets.JINHENGTAI_PASSWORD }}
+        port: 22
+        timeout: 600s
+        script: |
+          # 设置变量
+          PROJECT_DIR="/opt/cloudbase"
+          BACKEND_DIR="$PROJECT_DIR/backend"
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          
+          echo "Starting backend deployment at $TIMESTAMP"
+          
+          # 创建目录
+          sudo mkdir -p $PROJECT_DIR
+          sudo mkdir -p $BACKEND_DIR
+          sudo mkdir -p $PROJECT_DIR/logs
+          sudo mkdir -p $PROJECT_DIR/uploads
+          
+          # 备份现有后端
+          if [ -d "$BACKEND_DIR" ]; then
+            echo "Backing up existing backend..."
+            sudo mkdir -p /opt/cloudbase/backup
+            sudo cp -r $BACKEND_DIR /opt/cloudbase/backup/backend_$TIMESTAMP
+          fi
+          
+          # 解压新版本
+          echo "Extracting new backend..."
+          cd /tmp
+          sudo tar -xzf backend-deploy.tar.gz -C $BACKEND_DIR
+          
+          # 安装依赖
+          echo "Installing dependencies..."
+          cd $BACKEND_DIR
+          sudo npm ci --production
+          
+          # 创建环境配置
+          echo "Creating environment configuration..."
+          sudo tee $BACKEND_DIR/.env > /dev/null <<EOF
+# 数据库配置
+DB_HOST=${{ secrets.JINHENGTAI_DB_HOST }}
+DB_PORT=${{ secrets.JINHENGTAI_DB_PORT }}
+DB_NAME=${{ secrets.JINHENGTAI_DB_NAME }}
+DB_USER=${{ secrets.JINHENGTAI_DB_USER }}
+DB_PASSWORD=${{ secrets.JINHENGTAI_DB_PASSWORD }}
+
+# JWT配置
+JWT_SECRET=${{ secrets.JINHENGTAI_JWT_SECRET }}
+
+# 微信小程序配置
+WECHAT_APP_ID=${{ secrets.JINHENGTAI_WECHAT_APP_ID }}
+WECHAT_APP_SECRET=${{ secrets.JINHENGTAI_WECHAT_APP_SECRET }}
+
+# 微信支付配置
+WECHAT_MCH_ID=${{ secrets.JINHENGTAI_WECHAT_MCH_ID }}
+WECHAT_API_KEY=${{ secrets.JINHENGTAI_WECHAT_API_KEY }}
+WECHAT_CERT_PATH=${{ secrets.JINHENGTAI_WECHAT_CERT_PATH }}
+WECHAT_KEY_PATH=${{ secrets.JINHENGTAI_WECHAT_KEY_PATH }}
+
+# 服务器配置
+PORT=3000
+NODE_ENV=production
+
+# 文件上传配置
+UPLOAD_PATH=/opt/cloudbase/uploads
+MAX_FILE_SIZE=10485760
+
+# CORS配置
+CORS_ORIGIN=${{ secrets.JINHENGTAI_CORS_ORIGIN }}
+EOF
+          
+          # 设置权限
+          sudo chown -R $USER:$USER $BACKEND_DIR
+          sudo chmod +x $BACKEND_DIR/dist/scripts/initDatabase.js
+          
+          # 构建项目
+          echo "Building project..."
+          cd $BACKEND_DIR
+          sudo npm run build
+          
+          # 初始化数据库（如果需要）
+          echo "Checking database initialization..."
+          if [ "${{ secrets.JINHENGTAI_INIT_DB }}" = "true" ]; then
+            echo "Initializing database..."
+            sudo node dist/scripts/initDatabase.js || echo "Database initialization failed, continuing..."
+          fi
+          
+          # 安装PM2（如果未安装）
+          if ! command -v pm2 &> /dev/null; then
+            echo "Installing PM2..."
+            sudo npm install -g pm2
+          fi
+          
+          # 启动后端服务
+          echo "Starting backend service..."
+          cd $BACKEND_DIR
+          sudo pm2 delete cloudbase-api 2>/dev/null || true
+          sudo pm2 start ecosystem.config.js --env production
+          sudo pm2 save
+          sudo pm2 startup
+          
+          # 设置防火墙规则
+          echo "Configuring firewall..."
+          sudo ufw allow 3000/tcp || echo "UFW not available or already configured"
+          
+          # 清理临时文件
+          echo "Cleaning up temporary files..."
+          rm -f /tmp/backend-deploy.tar.gz
+          
+          echo "Backend deployment completed successfully!"
+          echo "API Service: http://${{ secrets.JINHENGTAI_HOST }}:3000"
+          echo "Health Check: http://${{ secrets.JINHENGTAI_HOST }}:3000/health"

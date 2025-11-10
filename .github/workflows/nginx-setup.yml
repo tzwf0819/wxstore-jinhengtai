@@ -1,0 +1,113 @@
+name: Nginx Setup
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup-nginx:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Setup Nginx on Cloud Host
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.JINHENGTAI_HOST }}
+        username: ${{ secrets.JINHENGTAI_USERNAME }}
+        password: ${{ secrets.JINHENGTAI_PASSWORD }}
+        port: 22
+        timeout: 600s
+        script: |
+          # 更新系统包
+          sudo apt-get update
+          
+          # 安装Nginx
+          if ! command -v nginx &> /dev/null; then
+            echo "Installing Nginx..."
+            sudo apt-get install -y nginx
+          fi
+          
+          # 创建Nginx配置
+          echo "Creating Nginx configuration..."
+          sudo tee /etc/nginx/sites-available/cloudbase > /dev/null <<'EOF'
+server {
+    listen 80;
+    server_name ${{ secrets.JINHENGTAI_HOST }};
+    
+    # 日志配置
+    access_log /var/log/nginx/cloudbase_access.log;
+    error_log /var/log/nginx/cloudbase_error.log;
+    
+    # API代理
+    location /api/ {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
+        proxy_read_timeout 300s;
+        proxy_connect_timeout 75s;
+    }
+    
+    # 健康检查代理
+    location /health {
+        proxy_pass http://localhost:3000/health;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+    
+    # 静态文件服务（管理后台）
+    location /admin/ {
+        alias /opt/cloudbase/admin/dist/;
+        try_files \$uri \$uri/ /admin/index.html;
+        
+        # 缓存配置
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+    }
+    
+    # 文件上传
+    location /uploads/ {
+        alias /opt/cloudbase/uploads/;
+        expires 1y;
+        add_header Cache-Control "public";
+    }
+    
+    # 安全头
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+    add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
+    
+    # 隐藏Nginx版本
+    server_tokens off;
+}
+EOF
+          
+          # 启用站点
+          sudo ln -sf /etc/nginx/sites-available/cloudbase /etc/nginx/sites-enabled/
+          sudo rm -f /etc/nginx/sites-enabled/default
+          
+          # 测试配置
+          sudo nginx -t
+          
+          # 重启Nginx
+          sudo systemctl restart nginx
+          sudo systemctl enable nginx
+          
+          # 配置防火墙
+          sudo ufw allow 'Nginx Full' || echo "UFW not available or already configured"
+          
+          echo "Nginx setup completed!"
+          echo "API: http://${{ secrets.JINHENGTAI_HOST }}/api/"
+          echo "Health: http://${{ secrets.JINHENGTAI_HOST }}/health"
+          echo "Admin: http://${{ secrets.JINHENGTAI_HOST }}/admin/"
