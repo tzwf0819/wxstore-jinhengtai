@@ -50,9 +50,9 @@ jobs:
     - name: Deploy to Cloud Host
       uses: appleboy/ssh-action@v1.0.0
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        password: ${{ secrets.PASSWORD }}
+        host: ${{ secrets.JINHENGTAI_HOST }}
+        username: ${{ secrets.JINHENGTAI_USERNAME }}
+        password: ${{ secrets.JINHENGTAI_PASSWORD }}
         port: 22
         timeout: 300s
         script: |
