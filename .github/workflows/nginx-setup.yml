@@ -42,6 +42,8 @@ jobs:
           echo "Creating Nginx configuration directories..."
           sudo mkdir -p /etc/nginx/sites-available/
           sudo mkdir -p /etc/nginx/sites-enabled/
+          sudo mkdir -p /var/log/nginx/ # Ensure Nginx log directory exists
+          sudo mkdir -p /opt/cloudbase/admin/dist/ # Ensure admin static content directory exists
 
           echo "Writing Nginx configuration..."
           sudo tee /etc/nginx/sites-available/cloudbase > /dev/null <<'EOF'
@@ -108,6 +110,9 @@ jobs:
           echo "Testing Nginx configuration..."
           sudo nginx -t
 
+          echo "Temporarily disabling SELinux (if active)..."
+          sudo setenforce 0 || true
+
           echo "Restarting Nginx..."
           sudo systemctl restart nginx
           sudo systemctl enable nginx
@@ -123,3 +128,7 @@ jobs:
           echo "API: http://${{ secrets.JINHENGTAI_HOST }}/api/"
           echo "Health: http://${{ secrets.JINHENGTAI_HOST }}/health"
           echo "Admin: http://${{ secrets.JINHENGTAI_HOST }}/admin/"
+
+          echo "Checking Nginx service status for details..."
+          sudo systemctl status nginx.service || true
+          sudo journalctl -xe || true
