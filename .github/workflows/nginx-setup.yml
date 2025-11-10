@@ -39,6 +39,9 @@ jobs:
             ${INSTALL_CMD} nginx
           fi
 
+          echo "Creating Nginx configuration directory..."
+          sudo mkdir -p /etc/nginx/sites-available/
+
           echo "Writing Nginx configuration..."
           sudo tee /etc/nginx/sites-available/cloudbase > /dev/null <<'EOF'
           server {
