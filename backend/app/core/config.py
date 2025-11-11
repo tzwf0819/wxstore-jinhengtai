@@ -10,7 +10,9 @@ class Settings(BaseSettings):
     sql_server_user: str = "sa"
     sql_server_password: str = "YourStrong@Passw0rd"
     sql_server_database: str = "mall_db"
-    sql_server_driver: str = "ODBC Driver 17 for SQL Server"
+    sql_server_driver: str = "ODBC Driver 18 for SQL Server"
+    sql_server_encrypt: str = "no"
+    sql_server_trust_server_certificate: str = "yes"
 
     class Config:
         env_file = ".env"
@@ -18,11 +20,15 @@ class Settings(BaseSettings):
 
     @property
     def database_url(self) -> str:
+        driver = self.sql_server_driver.replace(" ", "+")
+        encrypt = self.sql_server_encrypt.lower()
+        trust_cert = self.sql_server_trust_server_certificate.lower()
         return (
             "mssql+pyodbc://"
             f"{self.sql_server_user}:{self.sql_server_password}@"
             f"{self.sql_server_host}:{self.sql_server_port}/"
-            f"{self.sql_server_database}?driver={self.sql_server_driver.replace(' ', '+')}"
+            f"{self.sql_server_database}?driver={driver}"
+            f"&Encrypt={encrypt}&TrustServerCertificate={trust_cert}"
         )
 
 
