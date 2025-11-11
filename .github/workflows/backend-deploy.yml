@@ -274,8 +274,8 @@ jobs:
             if [ ! -f "${BACKEND_DOCKER_DIR}/.env" ]; then
               echo "Generating docker-compose .env file for MSSQL"
               sudo tee "${BACKEND_DOCKER_DIR}/.env" > /dev/null <<ENVFILE
-SQL_SERVER_PASSWORD=${{ secrets.JINHENGTAI_DB_PASSWORD }}
-ENVFILE
+              SQL_SERVER_PASSWORD=${{ secrets.JINHENGTAI_DB_PASSWORD }}
+              ENVFILE
             fi
           fi
 
