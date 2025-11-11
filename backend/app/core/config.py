@@ -1,5 +1,7 @@
-from pydantic_settings import BaseSettings
 from functools import lru_cache
+
+from pydantic_settings import BaseSettings
+from sqlalchemy.engine import URL
 
 
 class Settings(BaseSettings):
@@ -19,16 +21,19 @@ class Settings(BaseSettings):
         env_file_encoding = "utf-8"
 
     @property
-    def database_url(self) -> str:
-        driver = self.sql_server_driver.replace(" ", "+")
-        encrypt = self.sql_server_encrypt.lower()
-        trust_cert = self.sql_server_trust_server_certificate.lower()
-        return (
-            "mssql+pyodbc://"
-            f"{self.sql_server_user}:{self.sql_server_password}@"
-            f"{self.sql_server_host}:{self.sql_server_port}/"
-            f"{self.sql_server_database}?driver={driver}"
-            f"&Encrypt={encrypt}&TrustServerCertificate={trust_cert}"
+    def database_url(self) -> URL:
+        return URL.create(
+            "mssql+pyodbc",
+            username=self.sql_server_user,
+            password=self.sql_server_password,
+            host=self.sql_server_host,
+            port=self.sql_server_port,
+            database=self.sql_server_database,
+            query={
+                "driver": self.sql_server_driver,
+                "Encrypt": self.sql_server_encrypt,
+                "TrustServerCertificate": self.sql_server_trust_server_certificate,
+            },
         )
 
 
