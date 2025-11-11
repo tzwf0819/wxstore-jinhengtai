@@ -72,15 +72,23 @@ jobs:
           sudo systemctl stop jinhengtai-backend.service 2>/dev/null || true
 
           echo "Syncing docker compose stack..."
-          sudo cp /home/${{ secrets.JINHENGTAI_USERNAME }}/cloudbase/backend/docker-compose.yml "${PROJECT_DIR}/docker-compose.yml" 2>/dev/null || true
+          sudo mkdir -p "${PROJECT_DIR}/deploy/nginx/conf.d"
           sudo cp /home/${{ secrets.JINHENGTAI_USERNAME }}/cloudbase/backend/deploy/nginx/conf.d/api.conf "${PROJECT_DIR}/deploy/nginx/conf.d/api.conf" 2>/dev/null || true
+          sudo cp /home/${{ secrets.JINHENGTAI_USERNAME }}/cloudbase/backend/docker-compose.yml "${PROJECT_DIR}/docker-compose.yml" 2>/dev/null || true
+
+          if [ ! -f "${PROJECT_DIR}/.env" ]; then
+            echo "Creating docker-compose .env"
+            sudo tee "${PROJECT_DIR}/.env" > /dev/null <<ENVFILE
+SQL_SERVER_PASSWORD=${{ secrets.JINHENGTAI_DB_PASSWORD }}
+ENVFILE
+          fi
 
           if command -v docker >/dev/null 2>&1; then
             cd "${PROJECT_DIR}"
             if command -v docker compose >/dev/null 2>&1; then
-              docker compose up -d --build
+              docker compose up -d --build nginx
             elif command -v docker-compose >/dev/null 2>&1; then
-              docker-compose up -d --build
+              docker-compose up -d --build nginx
             else
               echo "docker compose command not available" >&2
             fi

@@ -253,24 +253,36 @@ jobs:
           sudo systemctl status --no-pager jinhengtai-backend.service || true
           sudo journalctl -u jinhengtai-backend.service -n 50 --no-pager || true
 
+          BACKEND_RUN_DIR="/opt/cloudbase"
+          if [ -d "${BACKEND_RUN_DIR}" ]; then
+            echo "Syncing project assets to ${BACKEND_RUN_DIR}"
+            sudo rsync -a --delete "${BACKEND_DIR}/" "${BACKEND_RUN_DIR}/"
+            sudo chown -R "${SERVICE_USER}:${SERVICE_USER}" "${BACKEND_RUN_DIR}"
+          fi
+
+          BACKEND_DOCKER_DIR="/opt/jinhengtai-backend"
           if [ -f "${BACKEND_DIR}/deploy/nginx/conf.d/api.conf" ]; then
-            echo "Syncing docker-based Nginx configuration..."
-            sudo mkdir -p /opt/jinhengtai-backend/deploy/nginx/conf.d
-            sudo cp "${BACKEND_DIR}/deploy/nginx/conf.d/api.conf" /opt/jinhengtai-backend/deploy/nginx/conf.d/api.conf
-            sudo chown -R "${SERVICE_USER}:${SERVICE_USER}" /opt/jinhengtai-backend/deploy/nginx/conf.d
+            echo "Updating docker-compose Nginx configuration..."
+            sudo mkdir -p "${BACKEND_DOCKER_DIR}/deploy/nginx/conf.d"
+            sudo cp "${BACKEND_DIR}/deploy/nginx/conf.d/api.conf" "${BACKEND_DOCKER_DIR}/deploy/nginx/conf.d/api.conf"
           fi
 
           if [ -f "${BACKEND_DIR}/docker-compose.yml" ]; then
             echo "Updating docker-compose bundle..."
-            sudo mkdir -p /opt/jinhengtai-backend
-            sudo cp "${BACKEND_DIR}/docker-compose.yml" /opt/jinhengtai-backend/docker-compose.yml
-            sudo chown -R "${SERVICE_USER}:${SERVICE_USER}" /opt/jinhengtai-backend/docker-compose.yml
+            sudo mkdir -p "${BACKEND_DOCKER_DIR}"
+            sudo cp "${BACKEND_DIR}/docker-compose.yml" "${BACKEND_DOCKER_DIR}/docker-compose.yml"
+            if [ ! -f "${BACKEND_DOCKER_DIR}/.env" ]; then
+              echo "Generating docker-compose .env file for MSSQL"
+              sudo tee "${BACKEND_DOCKER_DIR}/.env" > /dev/null <<ENVFILE
+SQL_SERVER_PASSWORD=${{ secrets.JINHENGTAI_DB_PASSWORD }}
+ENVFILE
+            fi
           fi
 
           if command -v docker >/dev/null 2>&1; then
-            if [ -f "/opt/jinhengtai-backend/docker-compose.yml" ]; then
+            if [ -f "${BACKEND_DOCKER_DIR}/docker-compose.yml" ]; then
               echo "Recreating dockerized Nginx service..."
-              cd /opt/jinhengtai-backend
+              cd "${BACKEND_DOCKER_DIR}"
               if command -v docker compose >/dev/null 2>&1; then
                 docker compose up -d --build --no-deps nginx
               elif command -v docker-compose >/dev/null 2>&1; then
