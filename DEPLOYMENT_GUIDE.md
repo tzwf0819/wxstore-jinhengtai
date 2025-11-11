@@ -24,11 +24,12 @@
 
 ## 域名与访问入口
 - `https://api.jinhengtai.yidasoftware.xyz`：微信小程序及其他客户端直接调用的 API 域名（`app.js` 中的 `apiBaseUrl` 已指向该地址）
-- `https://yidasoftware.xyz/jinhengtai/`：新增的访问入口，Nginx 会将该前缀下的请求重写后转发给 FastAPI 服务
+- `https://yidasoftware.xyz/jinhengtai/`：主域名下的访问入口，Nginx 会将该前缀下的请求重写后转发给 FastAPI 服务
 - `https://yidasoftware.xyz/jinhengtai/docs`：FastAPI Swagger（被动转发）
 - `https://yidasoftware.xyz/jinhengtai/openapi.json`：OpenAPI 文档（被动转发）
+- `http://152.136.13.33/`：新增的 IP 直连入口，适用于尚未完成域名解析或调试阶段（仅 HTTP，无证书，加密需自行评估）
 
-> 请确保两个域名的 A 记录均指向 `152.136.13.33`，并在 DNS 解析生效后再刷新或重启 Nginx。
+> 使用 HTTP 直连时，请在第一台主机的反向代理中直接指向 `http://152.136.13.33`，无需再追加 `/jinhengtai` 前缀；若要对外提供 HTTPS，请仍以域名方式访问。
 
 ## 服务器目录结构
 ```
@@ -69,16 +70,17 @@
 
 ## Nginx 域名与路径配置说明
 - 配置文件：`deploy/nginx/conf.d/api.conf`
-- 已定义四个 server 块：
-  1. `jinhengtai.yidasoftware.xyz` 80 -> 强制跳转 HTTPS
-  2. `yidasoftware.xyz` 80 -> 强制跳转 HTTPS
-  3. `jinhengtai.yidasoftware.xyz` 443 -> 转发到 `http://api:8000`
-  4. `yidasoftware.xyz` 443 -> 针对 `/jinhengtai/` 路径做重写并转发到 `http://api:8000`
+- 已定义的 server 块：
+  1. `default_server` 80 -> 直接转发到 `http://api:8000`，允许通过 IP 访问
+  2. `jinhengtai.yidasoftware.xyz` 80 -> 强制跳转 HTTPS
+  3. `yidasoftware.xyz` 80 -> 强制跳转 HTTPS
+  4. `jinhengtai.yidasoftware.xyz` 443 -> 转发到 `http://api:8000`
+  5. `yidasoftware.xyz` 443 -> 针对 `/jinhengtai/` 路径做重写并转发到 `http://api:8000`
 - `/jinhengtai/` 路径规则：
   - 访问 `https://yidasoftware.xyz/jinhengtai/anything` => 实际转发为 `http://api:8000/anything`
   - `/jinhengtai`（无尾斜线）会自动 301 跳转到 `/jinhengtai/`
   - `/jinhengtai/` 之外的路径默认返回 404，避免误用主域名
-- 更新配置后执行 `sudo systemctl reload nginx` 或 `sudo docker compose restart nginx`
+- 更新配置后执行 `sudo docker compose up -d --build nginx` 或 `sudo docker compose restart nginx`
 
 ## 常用运维命令
 ```bash

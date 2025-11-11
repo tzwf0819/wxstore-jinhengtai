@@ -253,4 +253,32 @@ jobs:
           sudo systemctl status --no-pager jinhengtai-backend.service || true
           sudo journalctl -u jinhengtai-backend.service -n 50 --no-pager || true
 
+          if [ -f "${BACKEND_DIR}/deploy/nginx/conf.d/api.conf" ]; then
+            echo "Syncing docker-based Nginx configuration..."
+            sudo mkdir -p /opt/jinhengtai-backend/deploy/nginx/conf.d
+            sudo cp "${BACKEND_DIR}/deploy/nginx/conf.d/api.conf" /opt/jinhengtai-backend/deploy/nginx/conf.d/api.conf
+            sudo chown -R "${SERVICE_USER}:${SERVICE_USER}" /opt/jinhengtai-backend/deploy/nginx/conf.d
+          fi
+
+          if [ -f "${BACKEND_DIR}/docker-compose.yml" ]; then
+            echo "Updating docker-compose bundle..."
+            sudo mkdir -p /opt/jinhengtai-backend
+            sudo cp "${BACKEND_DIR}/docker-compose.yml" /opt/jinhengtai-backend/docker-compose.yml
+            sudo chown -R "${SERVICE_USER}:${SERVICE_USER}" /opt/jinhengtai-backend/docker-compose.yml
+          fi
+
+          if command -v docker >/dev/null 2>&1; then
+            if [ -f "/opt/jinhengtai-backend/docker-compose.yml" ]; then
+              echo "Recreating dockerized Nginx service..."
+              cd /opt/jinhengtai-backend
+              if command -v docker compose >/dev/null 2>&1; then
+                docker compose up -d --build --no-deps nginx
+              elif command -v docker-compose >/dev/null 2>&1; then
+                docker-compose up -d --build --no-deps nginx
+              else
+                echo "docker compose command not available; skip docker refresh" >&2
+              fi
+            fi
+          fi
+
           echo "Backend deployment completed successfully!"
