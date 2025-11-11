@@ -15,12 +15,12 @@
   <scroll-view class="content" scroll-y="true">
     <view class="product-grid">
       <product-card 
-        wx:for="{{products}}" 
+        wx:for="{{filteredProducts}}" 
         wx:key="id" 
         product="{{item}}">
       </product-card>
     </view>
-    <view wx:if="{{products.length === 0}}" class="empty-state">
+    <view wx:if="{{filteredProducts.length === 0}}" class="empty-state">
       该分类下暂无商品
     </view>
   </scroll-view>

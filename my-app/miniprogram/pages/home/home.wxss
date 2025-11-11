@@ -1,61 +1,26 @@
-.container {
+.home-container {
   display: flex;
   flex-direction: column;
-  padding: 20rpx;
 }
 
-.search-bar {
-  margin-bottom: 20rpx;
-}
-
-.search-bar input {
+.banner-swiper {
   width: 100%;
-  height: 80rpx;
-  border: 1px solid #ccc;
-  border-radius: 40rpx;
-  padding: 0 30rpx;
-  box-sizing: border-box;
+  height: 380rpx;
 }
 
-.swiper-container {
-  width: 100%;
-  height: 300rpx;
-  margin-bottom: 20rpx;
-  border-radius: 10rpx;
-  overflow: hidden;
-}
-
-.swiper-image {
+.slide-image {
   width: 100%;
   height: 100%;
 }
 
-.categories {
-  display: flex;
-  justify-content: space-around;
-  margin-bottom: 20rpx;
+.product-list-container {
+  padding: 20rpx;
+  background-color: #fff;
+  margin: 20rpx;
+  border-radius: 16rpx;
 }
 
-.category-item {
-  width: 25%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: 24rpx;
-}
-
-.category-icon {
-  width: 80rpx;
-  height: 80rpx;
-  margin-bottom: 10rpx;
-}
-
-.category-text {
-  color: #333;
-}
-
-.section-title {
+.product-list-title {
   font-size: 32rpx;
   font-weight: bold;
   margin-bottom: 20rpx;
@@ -65,4 +30,34 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
+}
+
+.product-card {
+  width: 48%; /* Or calc(50% - 10rpx) if you have margin/padding */
+  display: inline-block; /* Important for navigator to behave like a grid item */
+  vertical-align: top;
+  background-color: #fff;
+  border-radius: 10rpx;
+  margin-bottom: 20rpx;
+  overflow: hidden;
+  box-shadow: 0 0 10rpx rgba(0, 0, 0, 0.1);
+}
+
+.product-image {
+  width: 100%;
+  height: 300rpx;
+}
+
+.product-name {
+  font-size: 28rpx;
+  padding: 10rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.product-price {
+  font-size: 32rpx;
+  color: #e44d26;
+  padding: 0 10rpx 10rpx;
 }

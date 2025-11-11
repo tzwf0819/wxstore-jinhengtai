@@ -1,4 +1,0 @@
-.container { text-align: center; padding-top: 100rpx; }
-.result-title { font-size: 40rpx; margin: 20rpx 0; }
-.result-desc { color: #999; margin-bottom: 40rpx; }
-.actions .btn { margin: 10rpx; }

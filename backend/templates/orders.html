@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>订单管理</title>
+    <style>
+        body { font-family: sans-serif; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>订单管理</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>订单ID</th>
+                <th>总金额</th>
+                <th>状态</th>
+                <th>收货地址</th>
+                <th>联系方式</th>
+                <th>商品</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.id }}</td>
+                <td>{{ order.total_amount }}</td>
+                <td>{{ order.status }}</td>
+                <td>{{ order.shipping_address }}</td>
+                <td>{{ order.shipping_contact }}</td>
+                <td>
+                    <ul>
+                        {% for item in order.items %}
+                        <li>{{ item.product.name }} x {{ item.quantity }}</li>
+                        {% endfor %}
+                    </ul>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

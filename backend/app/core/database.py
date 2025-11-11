@@ -11,10 +11,6 @@ settings = get_settings()
 engine = create_engine(
     settings.database_url,
     pool_pre_ping=True,
-    connect_args={
-        "Encrypt": settings.sql_server_encrypt,
-        "TrustServerCertificate": settings.sql_server_trust_server_certificate,
-    },
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

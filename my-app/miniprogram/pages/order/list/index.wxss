@@ -1,1 +1,7 @@
-.empty-list { text-align: center; padding-top: 100rpx; color: #999; }
+.empty-orders {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #999;
+}

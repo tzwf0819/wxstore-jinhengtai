@@ -1,21 +1,26 @@
+import { getOrderDetail } from '../../../services/order';
+
 Page({
   data: {
-    status: 'success', // or 'fail'
-    orderId: '123456789'
+    order: null,
   },
 
   onLoad(options) {
-    if (options.status) {
-      this.setData({ status: options.status });
+    if (options.id) {
+      this.loadOrderDetail(options.id);
     }
   },
 
-  goToHome() {
-    wx.switchTab({ url: '/pages/home/home' });
+  async loadOrderDetail(orderId) {
+    wx.showLoading({ title: '加载中...' });
+    try {
+      const order = await getOrderDetail(orderId);
+      this.setData({ order });
+    } catch (error) {
+      console.error('Failed to load order detail', error);
+      wx.showToast({ title: '加载失败', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+    }
   },
-
-  viewOrder() {
-    // 在实际应用中，这里会跳转到此订单的详情
-    wx.showToast({ title: '查看订单功能待实现', icon: 'none' });
-  }
 });

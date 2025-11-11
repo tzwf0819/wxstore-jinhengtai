@@ -1,8 +1,19 @@
 <view class="container">
-  <view wx:if="{{orders.length > 0}}">
-    <!-- 订单列表将在这里 -->
-  </view>
-  <view wx:else class="empty-list">
-    <text>没有订单</text>
-  </view>
+  <block wx:if="{{orders.length > 0}}">
+    <van-card
+      wx:for="{{orders}}"
+      wx:key="id"
+      title="订单号: {{item.id}}"
+      desc="状态: {{item.status}}"
+      num="{{item.items.length}} 件商品"
+      price="{{item.total_amount}}"
+      bind:tap="navigateToDetail"
+      data-order-id="{{item.id}}"
+    />
+  </block>
+  <block wx:else>
+    <view class="empty-orders">
+      <text>还没有任何订单</text>
+    </view>
+  </block>
 </view>

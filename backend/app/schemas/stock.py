@@ -1,14 +1,16 @@
 from pydantic import BaseModel
 
-class StockBase(BaseModel):
+class StockMovementBase(BaseModel):
     product_id: int
     quantity: int
+    reference_id: str | None = None
 
-class StockCreate(StockBase):
+class StockMovementCreate(StockMovementBase):
     pass
 
-class Stock(StockBase):
+class StockMovementRead(StockMovementBase):
     id: int
+    movement_type: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True

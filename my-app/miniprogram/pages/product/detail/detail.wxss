@@ -1,75 +1,70 @@
 .container {
-  padding-bottom: 120rpx; /* 为操作按钮留出空间 */
-}
-
-.product-image {
-  width: 100%;
+  padding-bottom: 50px; /* Space for the goods action bar */
 }
 
 .product-info {
-  padding: 20rpx;
+  padding: 16px;
   background-color: #fff;
 }
 
-.product-name {
-  font-size: 36rpx;
-  font-weight: bold;
+.price-stock {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
 }
 
 .product-price {
-  font-size: 40rpx;
-  color: #ff0000;
+  font-size: 24px;
+  color: #ee0a24;
   font-weight: bold;
-  margin-top: 10rpx;
 }
 
-.specs {
-  padding: 20rpx;
-  background-color: #fff;
-  margin-top: 20rpx;
+.product-stock {
+  font-size: 14px;
+  color: #999;
 }
 
-.spec-group {
-  margin-bottom: 20rpx;
+.product-name {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 8px;
 }
 
-.spec-name {
-  font-size: 28rpx;
-  margin-bottom: 10rpx;
+.product-description {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 16px;
 }
 
-.spec-options {
+.quantity-selector {
   display: flex;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-top: 1px solid #f0f0f0;
+  margin-top: 10px;
 }
 
-.spec-option {
-  padding: 10rpx 20rpx;
-  border: 1px solid #ccc;
-  border-radius: 10rpx;
-  margin-right: 20rpx;
-  margin-bottom: 10rpx;
+.quantity-selector text {
+  font-size: 14px;
+  color: #333;
 }
 
-.spec-option.active {
-  background-color: #6A5ACD;
-  color: #fff;
-  border-color: #6A5ACD;
+.detail-content,
+.specs-content {
+  padding: 16px;
+  background-color: #fff;
+  margin-top: 10px;
+  font-size: 14px;
+  color: #333;
+  line-height: 1.8;
 }
 
-.actions {
+.van-goods-action {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
-  padding: 20rpx;
-  background-color: #fff;
-  box-shadow: 0 -2rpx 10rpx rgba(0, 0, 0, 0.1);
-}
-
-.add-to-cart-btn {
-  width: 100%;
-  background-color: #6A5ACD;
-  color: #fff;
-  border-radius: 40rpx;
 }

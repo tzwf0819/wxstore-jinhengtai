@@ -52,7 +52,7 @@ App({
   },
 
   globalData: {
-    apiBaseUrl: 'https://api.jinhengtai.yidasoftware.xyz',
+    apiBaseUrl: 'http://192.168.1.242:8000/api/v1',
     userProfile: null,
     token: null
   }

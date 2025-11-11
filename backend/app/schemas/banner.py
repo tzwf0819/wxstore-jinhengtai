@@ -6,6 +6,9 @@ class BannerBase(BaseModel):
     is_active: bool = True
     sort_order: int = 0
 
+class BannerCreate(BannerBase):
+    pass
+
 class BannerRead(BannerBase):
     id: int
 

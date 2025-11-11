@@ -5,6 +5,10 @@ class ProductBase(BaseModel):
     name: str
     description: str | None = None
     price: float
+    stock_quantity: int
+    image_url: str | None = None
+    category: str | None = None
+    sales: int | None = 0
 
 
 class ProductCreate(ProductBase):
@@ -13,6 +17,7 @@ class ProductCreate(ProductBase):
 
 class ProductRead(ProductBase):
     id: int
+    current_stock: int = 0
 
     class Config:
         from_attributes = True
@@ -22,4 +27,4 @@ class Product(ProductBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True

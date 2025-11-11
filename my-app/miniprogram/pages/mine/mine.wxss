@@ -181,3 +181,26 @@
   border-radius: 44rpx;
   box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
 }
+
+/* Admin Card Styles */
+.admin-card {
+  background-color: #ffffff;
+  padding: 30rpx;
+  margin: 20rpx 0;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.admin-actions .action-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 0;
+  font-size: 30rpx;
+  color: #333;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.admin-actions .action-item:last-child {
+  border-bottom: none;
+}

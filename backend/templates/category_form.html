@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ 'Edit' if is_edit else 'Add' }} Category</title>
+</head>
+<body>
+    <h1>{{ '编辑' if is_edit else '新增' }}分类</h1>
+    <form action="{{ '/admin/category/edit/' + category.id|string if is_edit else '/admin/category/add' }}" method="post">
+        <div>
+            <label for="name">分类名:</label>
+            <input type="text" id="name" name="name" value="{{ category.name if category else '' }}" required>
+        </div>
+        <button type="submit">{{ '更新' if is_edit else '创建' }}</button>
+    </form>
+    <a href="/admin/categories">返回分类列表</a>
+</body>
+</html>

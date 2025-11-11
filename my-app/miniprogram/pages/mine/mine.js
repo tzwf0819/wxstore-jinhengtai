@@ -3,13 +3,6 @@ const USER_INFO_KEY = 'mall_user_info';
 Page({
   data: {
     userInfo: null, // Default to null, indicating not logged in
-    // Mock order stats, in a real app, this would be fetched from a server
-    orderStats: {
-      pendingPayment: 1,
-      pendingDelivery: 2,
-      pendingReceipt: 3,
-      completed: 4,
-    },
   },
 
   onShow() {
@@ -47,25 +40,6 @@ Page({
       }
     });
   },
-
-  logout() {
-    wx.showModal({
-      title: '确认退出',
-      content: '您确定要退出登录吗？',
-      success: (res) => {
-        if (res.confirm) {
-          try {
-            wx.removeStorageSync(USER_INFO_KEY);
-            this.setData({ userInfo: null });
-            wx.showToast({ title: '已退出' });
-          } catch (e) {
-            wx.showToast({ title: '退出失败', icon: 'none' });
-          }
-        }
-      }
-    });
-  },
-
   navigateTo(e) {
     const { url } = e.currentTarget.dataset;
     if (url) {

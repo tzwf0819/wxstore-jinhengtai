@@ -1,17 +1,23 @@
 from pydantic import BaseModel, computed_field
 
 
-class CategoryRead(BaseModel):
-    id: int
+class CategoryBase(BaseModel):
     name: str
-    code: str
-    icon_url: str | None
-    sort_order: int
+    icon_url: str | None = None
+    sort_order: int = 0
+    is_active: bool = True
 
-    @computed_field
-    @property
-    def icon(self) -> str | None:
-        return self.icon_url
+
+class CategoryCreate(CategoryBase):
+    pass
+
+
+class CategoryUpdate(CategoryBase):
+    pass
+
+
+class CategoryRead(CategoryBase):
+    id: int
 
     class Config:
         from_attributes = True

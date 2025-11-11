@@ -1,37 +1,29 @@
 <view class="container">
-  <view wx:if="{{cart.length > 0}}" class="cart-list-container">
-    <!-- Cart List -->
+  <block wx:if="{{cart.length > 0}}">
     <view class="cart-list">
-      <view class="cart-item" wx:for="{{cart}}" wx:key="id">
-        <image class="product-image" src="{{item.image}}" mode="aspectFill"></image>
-        <view class="product-info">
-          <view class="product-name">{{item.name}}</view>
-          <view class="price-stepper">
-            <view class="product-price">¥{{item.price}}</view>
-            <view class="stepper">
-              <view class="stepper-btn minus {{item.quantity <= 1 ? 'disabled' : ''}}" bindtap="changeQuantity" data-id="{{item.id}}" data-amount="-1">-</view>
-              <input class="stepper-input" type="number" value="{{item.quantity}}" disabled/>
-              <view class="stepper-btn plus" bindtap="changeQuantity" data-id="{{item.id}}" data-amount="1">+</view>
-            </view>
+      <van-swipe-cell right-width="{{ 65 }}" wx:for="{{cart}}" wx:key="id">
+        <van-card
+          num="{{ item.quantity }}"
+          price="{{ item.price }}"
+          title="{{ item.name }}"
+          thumb="{{ item.image_url }}"
+        >
+          <view slot="footer">
+            <van-stepper value="{{ item.quantity }}" data-item-id="{{ item.id }}" bind:change="onQuantityChange" />
           </view>
-        </view>
-        <view class="delete-btn" bindtap="deleteItem" data-id="{{item.id}}">删除</view>
-      </view>
+        </van-card>
+        <view slot="right" class="delete-button" data-item-id="{{ item.id }}" bind:tap="onDeleteItem">删除</view>
+      </van-swipe-cell>
     </view>
-  </view>
-
-  <!-- Empty State -->
-  <view wx:else class="empty-cart">
-    <image class="empty-image" src="/images/empty-cart.png" mode="widthFix"></image>
-    <text class="empty-text">购物车还是空的</text>
-    <button class="go-shopping-btn" bindtap="goShopping">去逛逛</button>
-  </view>
-
-  <!-- Checkout Bar -->
-  <view class="checkout-bar" wx:if="{{cart.length > 0}}">
-    <view class="total-price">
-      合计：<text class="price-value">¥{{totalPrice}}</text>
+    <van-submit-bar
+      price="{{ totalPrice }}"
+      button-text="去结算"
+      bind:submit="onSubmit"
+    />
+  </block>
+  <block wx:else>
+    <view class="empty-cart">
+      <text>购物车还是空的，快去逛逛吧～</text>
     </view>
-    <button class="checkout-btn" bindtap="goToCheckout">结算({{totalItems}})</button>
-  </view>
+  </block>
 </view>

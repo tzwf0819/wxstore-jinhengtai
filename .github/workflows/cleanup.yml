@@ -1,0 +1,67 @@
+
+name: Host Cleanup
+
+on:
+  workflow_dispatch: # Allows manual triggering from the GitHub Actions UI
+
+jobs:
+  cleanup-server:
+    name: Clean Up Deployment Server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Connect to server and clean up files
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.JINHENGTAI_HOST }}
+          username: ${{ secrets.JINHENGTAI_USERNAME }}
+          password: ${{ secrets.JINHENGTAI_PASSWORD }}
+          port: 22
+          timeout: 120s
+          script: |
+            set -euo pipefail
+            echo "--- Starting server cleanup process ---"
+
+            # 1. Clean up temporary deployment files from /tmp
+            echo "1. Cleaning up temporary deployment archives..."
+            sudo find /tmp -name "backend-deploy.tar.gz" -type f -delete
+            echo "Temporary files cleaned."
+
+            # 2. Clean up old backups, keeping the 5 most recent ones
+            BACKUP_DIR="/opt/cloudbase/backup"
+            KEEP_COUNT=5
+            echo "2. Cleaning up old backups in ${BACKUP_DIR}, keeping the ${KEEP_COUNT} most recent..."
+            if [ -d "${BACKUP_DIR}" ]; then
+              # Count the number of backup directories matching the pattern
+              BACKUP_COUNT=$(sudo ls -1d ${BACKUP_DIR}/backend_* 2>/dev/null | wc -l)
+              if [ "${BACKUP_COUNT}" -gt "${KEEP_COUNT}" ]; then
+                echo "Found ${BACKUP_COUNT} backups. Deleting the oldest ones..."
+                # List directories by time, keep the newest N, and delete the rest
+                sudo ls -1dt ${BACKUP_DIR}/backend_* | tail -n +$((${KEEP_COUNT} + 1)) | xargs sudo rm -rf
+                echo "Old backups deleted."
+              else
+                echo "Found ${BACKUP_COUNT} backups. No cleanup needed."
+              fi
+            else
+              echo "Backup directory ${BACKUP_DIR} not found. Skipping."
+            fi
+
+            # 3. Clean apt package cache
+            echo "3. Cleaning apt package cache..."
+            if command -v apt-get &> /dev/null; then
+                sudo apt-get clean
+                echo "Apt cache cleaned."
+            else
+                echo "apt-get not found. Skipping cache clean."
+            fi
+
+            # 4. Clean up Docker system, if it is installed
+            echo "4. Checking for Docker..."
+            if command -v docker &> /dev/null; then
+                echo "Pruning Docker system (this may take a while)..."
+                sudo docker system prune -af
+                echo "Docker system pruned."
+            else
+                echo "Docker not found. Skipping Docker prune."
+            fi
+
+            echo "--- Server cleanup finished successfully! ---"

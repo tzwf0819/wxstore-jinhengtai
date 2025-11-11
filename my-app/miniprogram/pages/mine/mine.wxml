@@ -45,35 +45,4 @@
       </view>
     </view>
   </view>
-
-  <!-- 功能入口网格 -->
-  <view class="function-grid">
-    <view class="grid-item" bindtap="navigateTo" data-url="/pages/favorite/favorite">
-      <image class="grid-icon" src="/images/icons/favorite.png"></image>
-      <text class="grid-text">我的收藏</text>
-    </view>
-    <view class="grid-item" bindtap="navigateTo" data-url="/pages/coupon/coupon">
-      <image class="grid-icon" src="/images/icons/coupon.png"></image>
-      <text class="grid-text">优惠券</text>
-    </view>
-    <view class="grid-item" bindtap="navigateTo" data-url="/pages/address/address">
-      <image class="grid-icon" src="/images/icons/address.png"></image>
-      <text class="grid-text">地址管理</text>
-    </view>
-    <view class="grid-item" bindtap="navigateTo" data-url="/pages/after-sales/list">
-      <image class="grid-icon" src="/images/icons/after-sales.png"></image>
-      <text class="grid-text">售后服务</text>
-    </view>
-    <view class="grid-item" bindtap="navigateTo" data-url="/pages/notifications/list">
-      <image class="grid-icon" src="/images/icons/notification.png"></image>
-      <text class="grid-text">消息提醒</text>
-    </view>
-    <view class="grid-item" bindtap="navigateTo" data-url="/pages/settings/settings">
-      <image class="grid-icon" src="/images/icons/settings.png"></image>
-      <text class="grid-text">设置</text>
-    </view>
-  </view>
-
-  <!-- 退出登录按钮 -->
-  <view class="logout-button" bindtap="logout" wx:if="{{userInfo}}">退出登录</view>
 </view>

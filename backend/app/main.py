@@ -1,19 +1,24 @@
 from fastapi import FastAPI
-from app.core.db import engine, Base
-from app.api.endpoints import products, stocks, orders, categories, banners
+from fastapi.staticfiles import StaticFiles
 
-Base.metadata.create_all(bind=engine)
+from app.api import api_router
+from app.web.admin import router as admin_web_router
+from app.api.endpoints import admin as admin_api_router
 
-app = FastAPI(title="Jinhengtai Mall API")
+app = FastAPI(title="Jinhengtai Mall API", root_path="/jinhengtai")
 
+# --- Static files and Templates ---
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+# --- API Routes ---
 API_V1_PREFIX = "/api/v1"
+app.include_router(api_router, prefix=API_V1_PREFIX)
 
-app.include_router(products.router, prefix=f"{API_V1_PREFIX}/products", tags=["products"])
-app.include_router(stocks.router, prefix=f"{API_V1_PREFIX}/stocks", tags=["stocks"])
-app.include_router(orders.router, prefix=f"{API_V1_PREFIX}/orders", tags=["orders"])
-app.include_router(categories.router, prefix=f"{API_V1_PREFIX}/categories", tags=["categories"])
-app.include_router(banners.router, prefix=f"{API_V1_PREFIX}/banners", tags=["banners"])
+# --- Web Admin Routes ---
+app.include_router(admin_web_router, tags=["admin-web"])
+app.include_router(admin_api_router.router, prefix="/admin/api", tags=["admin-api"])
+
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the Jinhengtai Mall API"}
+    return {"message": "Welcome to the Jinhengtai Mall API. Visit /admin/products for the web admin."}

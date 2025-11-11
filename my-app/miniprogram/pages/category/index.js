@@ -1,56 +1,43 @@
-const API_BASE_URL = 'https://www.yidasoftware.xyz/jinhengtai/api/v1';
+import { getCategories, getProducts } from '../../services/product';
+import { API_BASE_URL } from '../../utils/api';
 
 Page({
   data: {
     categories: [],
-    products: [],
+    allProducts: [],
     activeCategory: null,
+    filteredProducts: []
   },
 
   onLoad() {
-    this.loadCategories();
+    this.loadData();
   },
 
-  loadCategories() {
-    wx.request({
-      url: `${API_BASE_URL}/categories/`,
-      method: 'GET',
-      success: (res) => {
-        if (res.statusCode === 200 && res.data.length > 0) {
-          this.setData({
-            categories: res.data,
-            activeCategory: res.data[0] // Set the first category as active by default
-          });
-          this.loadProductsForCategory();
-        }
-      },
-      fail: (err) => {
-        console.error('Failed to load categories', err);
-      }
-    });
-  },
+  async loadData() {
+    wx.showLoading({ title: '加载中...' });
+    try {
+      const [categories, allProducts] = await Promise.all([
+        getCategories(),
+        getProducts({ page_size: 200 })
+      ]);
 
-  loadProductsForCategory() {
-    if (!this.data.activeCategory) return;
+      const serverBaseUrl = 'http://192.168.1.242:8000';
+      const formattedProducts = allProducts.map(p => ({ ...p, image_url: p.image_url && (p.image_url.startsWith('http') ? p.image_url : serverBaseUrl + p.image_url) }));
 
-    wx.request({
-      url: `${API_BASE_URL}/products/`,
-      method: 'GET',
-      data: {
-        category_code: this.data.activeCategory.code,
-        page_size: 50 // Load more products for category page
-      },
-      success: (res) => {
-        if (res.statusCode === 200) {
-          this.setData({
-            products: res.data
-          });
-        }
-      },
-      fail: (err) => {
-        console.error('Failed to load products for category', err);
+      if (categories.length > 0) {
+        const activeCategory = categories[0];
+        this.setData({
+          categories,
+          allProducts: formattedProducts,
+          activeCategory,
+          filteredProducts: formattedProducts.filter(p => p.category === activeCategory.name)
+        });
       }
-    });
+    } catch (error) {
+      console.error('Failed to load data', error);
+    } finally {
+      wx.hideLoading();
+    }
   },
 
   switchCategory(e) {
@@ -60,9 +47,8 @@ Page({
     if (newActiveCategory && newActiveCategory.id !== this.data.activeCategory.id) {
       this.setData({
         activeCategory: newActiveCategory,
-        products: [] // Clear previous products immediately for better UX
+        filteredProducts: this.data.allProducts.filter(p => p.category === newActiveCategory.name)
       });
-      this.loadProductsForCategory();
     }
   }
 });

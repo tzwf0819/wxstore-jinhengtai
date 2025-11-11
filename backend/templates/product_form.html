@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ '编辑商品' if is_edit else '新建商品' }}</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        .form-group { margin-bottom: 1em; }
+        label { display: block; margin-bottom: 0.5em; }
+        input, textarea { width: 100%; padding: 8px; box-sizing: border-box; }
+        button { padding: 10px 15px; }
+    </style>
+</head>
+<body>
+    <h1>{{ '编辑商品' if is_edit else '新建商品' }}</h1>
+    <a href="/admin/products">返回商品列表</a>
+    <form id="productForm">
+        <div class="form-group">
+            <label for="name">名称</label>
+            <input type="text" id="name" name="name" value="{{ product.name if product else '' }}" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" name="description">{{ product.description if product else '' }}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="price">价格</label>
+            <input type="number" id="price" name="price" step="0.01" value="{{ product.price if product else '' }}" required>
+        </div>
+        <div class="form-group">
+            <label for="stock">初始库存</label>
+            <input type="number" id="stock" name="stock" value="{{ product.stock if product else '0' }}" {{ 'disabled' if is_edit }}>
+        </div>
+        <div class="form-group">
+            <label for="category">分类</label>
+            <select id="category" name="category">
+                <option value="">-- 无 --</option>
+                {% for cat in categories %}
+                <option value="{{ cat.name }}" {{ 'selected' if product and product.category == cat.name else '' }}>
+                    {{ cat.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="image">图片</label>
+            <input type="file" id="image" name="image" accept="image/*">
+            {% if product and product.image_url %}
+                <div style="margin-top: 10px;">
+                    <img src="{{ product.image_url }}" alt="当前图片" width="100">
+                    <button type="button" id="clearImageBtn">清除图片</button>
+                </div>
+            {% endif %}
+        </div>
+        <button type="submit">Save</button>
+    </form>
+
+    <script>
+        const isEdit = {{ is_edit | tojson }};
+        const productId = {{ product.id if product else 'null' }};
+        let imageUrl = '{{ product.image_url if product else '' }}';
+
+        document.getElementById('productForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const imageFile = document.getElementById('image').files[0];
+
+            if (imageFile) {
+                const formData = new FormData();
+                formData.append('file', imageFile);
+
+                try {
+                    const uploadResponse = await fetch('/api/v1/upload', {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    if (!uploadResponse.ok) {
+                        throw new Error('图片上传失败');
+                    }
+
+                    const uploadResult = await uploadResponse.json();
+                    imageUrl = uploadResult.file_url;
+                } catch (error) {
+                    console.error('上传图片时出错:', error);
+                    alert('上传图片时发生错误。');
+                    return;
+                }
+            }
+
+            const productData = {
+                name: document.getElementById('name').value,
+                description: document.getElementById('description').value,
+                price: parseFloat(document.getElementById('price').value),
+                stock: parseInt(document.getElementById('stock').value),
+                category: document.getElementById('category').value,
+                image_url: imageUrl,
+            };
+
+            const url = isEdit ? `/api/v1/products/${productId}` : '/api/v1/products/';
+            const method = isEdit ? 'PUT' : 'POST';
+
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(productData),
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Product saved successfully');
+                    window.location.href = '/admin/products';
+                } else {
+                    alert('Failed to save product');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('发生了错误');
+            });
+        });
+
+        const clearImageBtn = document.getElementById('clearImageBtn');
+        if (clearImageBtn) {
+            clearImageBtn.addEventListener('click', function() {
+                imageUrl = null;
+                // Visually remove the image preview
+                const imageContainer = this.parentElement;
+                if (imageContainer) {
+                    imageContainer.remove();
+                }
+                alert('图片将在保存后被清除。');
+            });
+        }
+    </script>
+</body>
+<

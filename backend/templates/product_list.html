@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品管理</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .actions a, .actions button { margin-right: 10px; }
+        .add-btn { margin-top: 20px; padding: 10px 15px; }
+    </style>
+</head>
+<body>
+    <h1>Product Management</h1>
+    <a href="/admin">返回主页</a>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>名称</th>
+                <th>图片</th>
+                <th>价格</th>
+                <th>库存</th>
+                <th>分类</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr id="product-{{ product.id }}">
+                <td>{{ product.id }}</td>
+                <td>{{ product.name }}</td>
+                <td><img src="{{ product.image_url }}" alt="{{ product.name }}" width="50" /></td>
+                <td>{{ product.price }}</td>
+                <td>{{ product.current_stock }}</td>
+                <td>{{ product.category }}</td>
+                <td class="actions">
+                    <a href="/admin/products/edit/{{ product.id }}">Edit</a>
+                    <button onclick="deleteProduct({{ product.id }})">Delete</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="/admin/products/new"><button class="add-btn">添加新商品</button></a>
+
+    <script>
+        function deleteProduct(id) {
+            if (!confirm('您确定要删除此商品吗？')) {
+                return;
+            }
+            fetch(`/api/v1/products/${id}`, {
+                method: 'DELETE',
+            })
+            .then(response => {
+                if (response.status === 204) {
+                    alert('商品删除成功');
+                    document.getElementById(`product-${id}`).remove();
+                } else {
+                    alert('删除商品失败');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('发生了错误');
+            });
+        }
+    </script>
+</body>
+</html>

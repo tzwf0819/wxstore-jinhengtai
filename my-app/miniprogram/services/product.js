@@ -2,6 +2,8 @@
  * 商品数据服务
  */
 import { request } from './request';
+import { getSwiperList as getBanners } from './swiper'; // Assuming getBanners is in swiper.js
+import { getCategoryList as getCategories } from './category'; // Assuming getCategories is in category.js
 
 const buildSortQuery = (orderBy) => {
   if (!orderBy) {
@@ -12,7 +14,7 @@ const buildSortQuery = (orderBy) => {
 };
 
 // 获取商品列表
-export const getProductList = async (options = {}) => {
+export const getProducts = async (options = {}) => {
   try {
     const {
       pageNum = 1,
@@ -36,7 +38,7 @@ export const getProductList = async (options = {}) => {
       data: query
     });
 
-    return data?.items || [];
+    return data || [];
   } catch (error) {
     console.error('获取商品列表失败', error);
     return [];
@@ -68,7 +70,7 @@ export const getHotProducts = async (limit = 6) => {
         sort_order: 'desc'
       }
     });
-    return data?.items || data?.results || [];
+    return data || [];
   } catch (error) {
     console.error('获取热门商品失败', error);
     return [];
@@ -87,7 +89,7 @@ export const getNewProducts = async (limit = 6) => {
         sort_order: 'desc'
       }
     });
-    return data?.items || data?.results || [];
+    return data || [];
   } catch (error) {
     console.error('获取新品失败', error);
     return [];
@@ -113,9 +115,12 @@ export const searchProducts = async (keyword, options = {}) => {
       }
     });
 
-    return data?.items || data?.results || [];
+    return data || [];
   } catch (error) {
     console.error('搜索商品失败', error);
     return [];
   }
 };
+
+export { getBanners, getCategories };
+
