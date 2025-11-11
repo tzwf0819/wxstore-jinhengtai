@@ -78,8 +78,8 @@ jobs:
 
           SQL_PASSWORD="${{ secrets.JINHENGTAI_DB_PASSWORD }}"
           cat <<EOF | sudo tee "${PROJECT_DIR}/.env" > /dev/null
-          SQL_SERVER_PASSWORD=${SQL_PASSWORD:-YourStrong@Passw0rd}
-          EOF
+            SQL_SERVER_PASSWORD=${SQL_PASSWORD:-YourStrong@Passw0rd}
+            EOF
 
           if command -v docker >/dev/null 2>&1; then
             cd "${PROJECT_DIR}"
