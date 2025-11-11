@@ -1,24 +1,15 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from loguru import logger
+from app.core.db import engine, Base
+from app.api.endpoints import products, stocks, orders
 
-from .api import api_router
-from .core.config import get_settings
+Base.metadata.create_all(bind=engine)
 
-settings = get_settings()
-app = FastAPI(title=settings.app_name, debug=settings.debug)
+app = FastAPI()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[settings.api_base_url, "https://jinhengtai.yidasoftware.xyz"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app.include_router(products.router, prefix="/products", tags=["products"])
+app.include_router(stocks.router, prefix="/stocks", tags=["stocks"])
+app.include_router(orders.router, prefix="/orders", tags=["orders"])
 
-app.include_router(api_router)
-
-
-@app.on_event("startup")
-async def startup_event() -> None:
-    logger.info("Starting FastAPI application: {}", settings.app_name)
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to the Mall API"}

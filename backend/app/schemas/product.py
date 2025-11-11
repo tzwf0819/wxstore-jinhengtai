@@ -1,22 +1,15 @@
-from decimal import Decimal
-
 from pydantic import BaseModel
 
-
-from .category import CategoryRead
-
-
-class ProductRead(BaseModel):
-    id: int
+class ProductBase(BaseModel):
     name: str
-    code: str
-    description: str | None
-    price: Decimal
-    cover_url: str | None
-    stock: int
-    sales: int
-    is_active: bool
-    categories: list[CategoryRead]
+    description: str | None = None
+    price: float
+
+class ProductCreate(ProductBase):
+    pass
+
+class Product(ProductBase):
+    id: int
 
     class Config:
-        from_attributes = True
+        orm_mode = True

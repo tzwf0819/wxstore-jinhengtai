@@ -1,13 +1,15 @@
 {
   "pages": [
-    "pages/index/index",
+    "pages/home/home",
     "pages/search/search",
     "pages/product/detail/detail",
     "pages/mine/mine",
     "pages/cart/cart",
     "pages/checkout/checkout",
     "pages/order/list/index",
-    "pages/order/detail/index"
+    "pages/order/detail/index",
+    "pages/after-sales/list",
+    "pages/notifications/list"
   ],
   "window": {
     "backgroundTextStyle": "light",
@@ -21,7 +23,7 @@
     "backgroundColor": "#ffffff",
     "list": [
       {
-        "pagePath": "pages/index/index",
+        "pagePath": "pages/home/home",
         "text": "首页",
         "iconPath": "images/home.png",
         "selectedIconPath": "images/home-active.png"

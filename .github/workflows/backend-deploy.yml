@@ -241,6 +241,7 @@ jobs:
           [Install]
           WantedBy=multi-user.target
           SERVICE
+          sudo sed -i 's/^[[:space:]]\\+//' /etc/systemd/system/jinhengtai-backend.service
 
           echo "Reloading systemd and restarting service..."
           sudo systemctl daemon-reload
