@@ -253,13 +253,6 @@ jobs:
           sudo systemctl status --no-pager jinhengtai-backend.service || true
           sudo journalctl -u jinhengtai-backend.service -n 50 --no-pager || true
 
-          BACKEND_RUN_DIR="/opt/cloudbase"
-          if [ -d "${BACKEND_RUN_DIR}" ]; then
-            echo "Syncing project assets to ${BACKEND_RUN_DIR}"
-            sudo rsync -a --delete "${BACKEND_DIR}/" "${BACKEND_RUN_DIR}/"
-            sudo chown -R "${SERVICE_USER}:${SERVICE_USER}" "${BACKEND_RUN_DIR}"
-          fi
-
           BACKEND_DOCKER_DIR="/opt/jinhengtai-backend"
           DOCKER_SQL_PASS="${{ secrets.JINHENGTAI_DB_PASSWORD }}"
 
@@ -275,7 +268,7 @@ jobs:
             sudo cp "${BACKEND_DIR}/docker-compose.yml" "${BACKEND_DOCKER_DIR}/docker-compose.yml"
             cat <<EOF | sudo tee "${BACKEND_DOCKER_DIR}/.env" > /dev/null
               SQL_SERVER_PASSWORD=${DOCKER_SQL_PASS:-YourStrong@Passw0rd}
-              EOF
+            EOF
           fi
 
           if command -v docker >/dev/null 2>&1; then
