@@ -209,14 +209,14 @@ jobs:
 
           echo "Writing environment variables..."
           sudo tee "${BACKEND_DIR}/.env" > /dev/null <<EOF
-          APP_NAME=Jinhengtai Mall Backend
-          DEBUG=false
-          SQL_SERVER_HOST=${{ secrets.JINHENGTAI_DB_HOST }}
-          SQL_SERVER_PORT=${{ secrets.JINHENGTAI_DB_PORT }}
-          SQL_SERVER_USER=${{ secrets.JINHENGTAI_DB_USER }}
-          SQL_SERVER_PASSWORD=${{ secrets.JINHENGTAI_DB_PASSWORD }}
-          SQL_SERVER_DATABASE=${{ secrets.JINHENGTAI_DB_NAME }}
-          SQL_SERVER_DRIVER=ODBC Driver 18 for SQL Server
+            APP_NAME=Jinhengtai Mall Backend
+            DEBUG=false
+            SQL_SERVER_HOST=${{ secrets.JINHENGTAI_DB_HOST }}
+            SQL_SERVER_PORT=${{ secrets.JINHENGTAI_DB_PORT }}
+            SQL_SERVER_USER=${{ secrets.JINHENGTAI_DB_USER }}
+            SQL_SERVER_PASSWORD=${{ secrets.JINHENGTAI_DB_PASSWORD }}
+            SQL_SERVER_DATABASE=${{ secrets.JINHENGTAI_DB_NAME }}
+            SQL_SERVER_DRIVER=ODBC Driver 18 for SQL Server
           EOF
 
           echo "Setting permissions..."
