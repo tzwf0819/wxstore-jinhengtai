@@ -86,6 +86,47 @@ jobs:
           cd /tmp
           sudo tar -xzf backend-deploy.tar.gz -C "${BACKEND_DIR}" --strip-components=1
 
+          echo "Installing ODBC dependencies..."
+          if command -v apt-get >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y curl gnupg unixodbc unixodbc-dev
+            if [ ! -f /etc/apt/sources.list.d/mssql-release.list ]; then
+              curl -sS https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+              curl -sS https://packages.microsoft.com/config/ubuntu/20.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list >/dev/null
+              sudo apt-get update
+            fi
+            sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 || true
+          elif command -v dnf >/dev/null 2>&1; then
+            sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+            sudo tee /etc/yum.repos.d/mssql-release.repo > /dev/null <<'EOF'
+          [packages-microsoft-com-prod]
+          name=Microsoft Packages
+          baseurl=https://packages.microsoft.com/rhel/8/prod/
+          enabled=1
+          gpgcheck=1
+          gpgkey=https://packages.microsoft.com/keys/microsoft.asc
+          EOF
+            sudo dnf remove -y unixODBC-utf16 unixODBC-utf16-devel || true
+            sudo dnf install -y unixODBC unixODBC-devel
+            sudo ACCEPT_EULA=Y dnf install -y msodbcsql18 mssql-tools18 || true
+          elif command -v yum >/dev/null 2>&1; then
+            sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+            sudo tee /etc/yum.repos.d/mssql-release.repo > /dev/null <<'EOF'
+          [packages-microsoft-com-prod]
+          name=Microsoft Packages
+          baseurl=https://packages.microsoft.com/rhel/7/prod/
+          enabled=1
+          gpgcheck=1
+          gpgkey=https://packages.microsoft.com/keys/microsoft.asc
+          EOF
+            sudo yum remove -y unixODBC-utf16 unixODBC-utf16-devel || true
+            sudo yum install -y unixODBC unixODBC-devel
+            sudo ACCEPT_EULA=Y yum install -y msodbcsql18 mssql-tools18 || true
+          else
+            echo "Unsupported package manager. Install ODBC dependencies manually." >&2
+            exit 1
+          fi
+
           echo "Ensuring Python 3.8+ is available..."
 
           ensure_python() {
