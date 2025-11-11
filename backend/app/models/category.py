@@ -21,4 +21,5 @@ class Category(Base):
         secondary="product_categories",
         back_populates="categories",
         lazy="selectin",
+        viewonly=True,
     )

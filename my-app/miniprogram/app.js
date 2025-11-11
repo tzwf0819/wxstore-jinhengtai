@@ -52,7 +52,7 @@ App({
   },
 
   globalData: {
-    apiBaseUrl: 'https://api.jinhengtai-mall.com',
+    apiBaseUrl: 'https://api.jinhengtai.yidasoftware.xyz',
     userProfile: null,
     token: null
   }

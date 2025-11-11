@@ -68,7 +68,7 @@ export const getHotProducts = async (limit = 6) => {
         sort_order: 'desc'
       }
     });
-    return data?.items || [];
+    return data?.items || data?.results || [];
   } catch (error) {
     console.error('获取热门商品失败', error);
     return [];
@@ -87,7 +87,7 @@ export const getNewProducts = async (limit = 6) => {
         sort_order: 'desc'
       }
     });
-    return data?.items || [];
+    return data?.items || data?.results || [];
   } catch (error) {
     console.error('获取新品失败', error);
     return [];
@@ -113,7 +113,7 @@ export const searchProducts = async (keyword, options = {}) => {
       }
     });
 
-    return data?.items || [];
+    return data?.items || data?.results || [];
   } catch (error) {
     console.error('搜索商品失败', error);
     return [];

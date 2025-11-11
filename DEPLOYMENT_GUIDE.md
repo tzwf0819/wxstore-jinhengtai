@@ -1,299 +1,115 @@
 # 微信小程序电商系统部署指南
 
-## 项目概述
+## 架构概览
+- 微信小程序前端调用 FastAPI REST 接口提供的数据服务
+- FastAPI 通过 SQLAlchemy 连接本地 MSSQL Server，实现商品、分类、库存与订单逻辑
+- Docker Compose 编排 `api`（FastAPI）、`mssql`（SQL Server）、`nginx` 三个服务
+- Nginx 暴露 80/443 端口，负责反向代理、HTTPS、路径重写与证书续期
+- GitHub Actions 负责单元测试与自动部署脚本触发（可按需扩展）
 
-已成功将微信小程序云开发项目迁移到云主机架构，包含：
-
-✅ **已完成**
-- MSSQL Server 2019 数据库设计和表结构
-- Node.js + TypeScript + Express.js 后端API服务
-- 完整的用户认证、商品管理、购物车、订单系统
-- 文件上传和管理后台API
-- 测试服务器验证
-
-⏳ **待完成**
-- 微信支付集成
-- React管理后台
-- Nginx配置和云主机部署
-- 小程序API地址更新
-
-## 部署架构
+## 服务拓扑
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   微信小程序    │────│   Node.js API   │────│  MSSQL Server   │
-│   (前端)       │    │   (后端)       │    │   (数据库)     │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-                              │
-                       ┌─────────────────┐
-                       │  React管理后台   │
-                       │  (管理界面)     │
-                       └─────────────────┘
+┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
+│  微信小程序端   │ ---> │     Nginx       │ ---> │   FastAPI API   │
+│  (用户访问)     │      │ 80/443 反向代理 │      │    (uvicorn)    │
+└─────────────────┘      └─────────────────┘      └─────────────────┘
+                                                │
+                                                ▼
+                                       ┌─────────────────┐
+                                       │   SQL Server    │
+                                       │   (MSSQL 2022)  │
+                                       └─────────────────┘
 ```
 
-## 数据库信息
+## 域名与访问入口
+- `https://api.jinhengtai.yidasoftware.xyz`：微信小程序及其他客户端直接调用的 API 域名（`app.js` 中的 `apiBaseUrl` 已指向该地址）
+- `https://yidasoftware.xyz/jinhengtai/`：新增的访问入口，Nginx 会将该前缀下的请求重写后转发给 FastAPI 服务
+- `https://yidasoftware.xyz/jinhengtai/docs`：FastAPI Swagger（被动转发）
+- `https://yidasoftware.xyz/jinhengtai/openapi.json`：OpenAPI 文档（被动转发）
 
-- **服务器**: 152.136.13.33,1433
-- **用户名**: sa
-- **密码**: YourStrong@Passw0rd
-- **数据库名**: MiniAppEcommerce
+> 请确保两个域名的 A 记录均指向 `152.136.13.33`，并在 DNS 解析生效后再刷新或重启 Nginx。
 
-## 后端API服务
+## 服务器目录结构
+```
+/opt/jinhengtai-backend
+├── docker-compose.yml          # Compose 定义文件
+├── deploy
+│   ├── nginx/conf.d/api.conf   # Nginx 主配置（含域名、路径、证书）
+│   ├── certs/                  # 存放 fullchain.pem / privkey.pem
+│   ├── logs/                   # Nginx 访问与错误日志
+│   ├── tmp/                    # 临时文件（缓存等）
+│   └── scripts/
+│       ├── setup.sh            # 一键部署/更新脚本
+│       └── renew_cert.sh       # Certbot 证书续期脚本
+├── backend/                    # FastAPI 应用源码
+└── .env                        # API 服务环境变量（需手动创建）
+```
 
-### 技术栈
-- Node.js 18+
-- TypeScript
-- Express.js
-- Sequelize ORM
-- JWT认证
-- Multer文件上传
+## 环境变量与数据库
+- SQL Server 位于 `mssql` 容器中，通过 Compose 网络访问，默认 SA 密码存放在 `.env`
+- FastAPI 读取 `.env` 中的数据库连接串、JWT 设置等配置（请参考 `backend/app/core/config.py` 注释）
+- 如需外部连通 MSSQL，可在宿主机开放 1433，默认 Compose 已做 `1433:1433` 端口映射
 
-### 主要功能模块
-1. **用户认证** (`/api/auth`)
-   - 微信小程序登录
-   - JWT令牌管理
-   - 用户信息管理
+## 部署流程（首次或更新）
+1. **同步代码**：将最新仓库内容上传到服务器 `/opt/jinhengtai-backend`
+2. **准备环境**：确认服务器已安装 Docker 与（新版）`docker compose`/旧版 `docker-compose`
+3. **配置变量**：在 `backend/.env` 中补齐数据库、JWT、第三方服务配置
+4. **执行脚本**：运行 `sudo bash deploy/scripts/setup.sh`
+   - 自动创建目录结构与默认 Nginx 配置
+   - 自动执行 `docker compose up -d --build --remove-orphans`
+5. **校验服务**：
+   - `docker ps` 查看 `jinhengtai-api`、`jinhengtai-nginx`、`jinhengtai-mssql` 均为 `Up`
+   - 访问 `https://api.jinhengtai.yidasoftware.xyz/docs` 或 `https://yidasoftware.xyz/jinhengtai/docs`
 
-2. **商品管理** (`/api/products`)
-   - 商品列表、详情
-   - 分类管理
-   - 搜索功能
-   - 库存管理
+## SSL 证书管理
+- 脚本 `deploy/scripts/renew_cert.sh` 使用 Certbot Webroot 模式续期 `jinhengtai.yidasoftware.xyz` 与 `api.jinhengtai.yidasoftware.xyz`
+- 如需为 `yidasoftware.xyz` & `www.yidasoftware.xyz` 申请证书，请确保在脚本中新增域名参数或手动执行
+- 证书续期后脚本会自动复制到 `deploy/certs/` 并执行 `systemctl reload nginx`
 
-3. **购物车** (`/api/cart`)
-   - 添加、删除商品
-   - 数量更新
-   - 选中状态管理
+## Nginx 域名与路径配置说明
+- 配置文件：`deploy/nginx/conf.d/api.conf`
+- 已定义四个 server 块：
+  1. `jinhengtai.yidasoftware.xyz` 80 -> 强制跳转 HTTPS
+  2. `yidasoftware.xyz` 80 -> 强制跳转 HTTPS
+  3. `jinhengtai.yidasoftware.xyz` 443 -> 转发到 `http://api:8000`
+  4. `yidasoftware.xyz` 443 -> 针对 `/jinhengtai/` 路径做重写并转发到 `http://api:8000`
+- `/jinhengtai/` 路径规则：
+  - 访问 `https://yidasoftware.xyz/jinhengtai/anything` => 实际转发为 `http://api:8000/anything`
+  - `/jinhengtai`（无尾斜线）会自动 301 跳转到 `/jinhengtai/`
+  - `/jinhengtai/` 之外的路径默认返回 404，避免误用主域名
+- 更新配置后执行 `sudo systemctl reload nginx` 或 `sudo docker compose restart nginx`
 
-4. **订单系统** (`/api/orders`)
-   - 订单创建
-   - 状态管理
-   - 订单查询
-
-5. **支付系统** (`/api/payment`)
-   - 微信支付集成
-   - 支付回调
-   - 退款处理
-
-6. **管理后台** (`/api/admin`)
-   - 管理员认证
-   - 系统设置
-   - 数据统计
-
-### 启动方式
-
+## 常用运维命令
 ```bash
-# 进入后端目录
-cd backend
+# 拉取最新镜像并重启（在 /opt/jinhengtai-backend）
+sudo docker compose pull
+sudo docker compose up -d --build --remove-orphans
 
-# 安装依赖
-npm install
+# 查看容器状态与日志
+sudo docker compose ps
+sudo docker compose logs -f nginx
+sudo docker compose logs -f api
 
-# 配置环境变量
-cp .env.example .env
-# 编辑 .env 文件配置数据库连接等信息
+# 仅重载 Nginx（不重启容器）
+sudo systemctl reload nginx
 
-# 开发模式启动
-npm run dev
-
-# 生产模式启动
-npm run build
-npm start
+# 完整重启 Nginx 容器
+sudo docker compose restart nginx
 ```
 
-### 测试接口
+## 访问验证清单
+1. `curl -I https://api.jinhengtai.yidasoftware.xyz/health` 返回 200/204
+2. `curl -I https://yidasoftware.xyz/jinhengtai/health` 返回 200/204，且响应头 `location` 中无 `/jinhengtai/` 重复
+3. `https://yidasoftware.xyz/jinhengtai/docs` 正常展示 Swagger UI
+4. 小程序端调用可获取分类、商品列表、轮播图数据（参见 `miniprogram/services/*.js`）
 
-使用提供的测试服务器：
-
-```bash
-# 启动测试服务器
-node test-server.js
-```
-
-主要测试接口：
-- 健康检查: `http://localhost:3001/health`
-- API信息: `http://localhost:3001/api`
-- 商品列表: `http://localhost:3001/api/products`
-- 分类列表: `http://localhost:3001/api/categories`
-
-## 数据库表结构
-
-### 核心表
-
-1. **Users** - 用户表
-   - OpenId, UnionId
-   - 用户基本信息
-   - 状态管理
-
-2. **Products** - 商品表
-   - 商品基本信息
-   - 价格、库存、销量
-   - 状态管理
-
-3. **Categories** - 分类表
-   - 分类信息
-   - 层级关系
-
-4. **Cart** - 购物车表
-   - 用户购物车数据
-   - 商品数量、选中状态
-
-5. **Orders** - 订单表
-   - 订单基本信息
-   - 收货信息
-   - 状态管理
-
-6. **OrderItems** - 订单明细表
-   - 订单商品详情
-   - 规格信息
-
-7. **Admins** - 管理员表
-   - 管理员账户
-   - 权限管理
-
-8. **Settings** - 系统配置表
-   - 系统参数
-   - 配置管理
-
-详细表结构请参考 `backend/database/schema.sql`
-
-## 下一步部署计划
-
-### 1. 微信支付集成
-- 配置微信支付参数
-- 实现统一下单接口
-- 处理支付回调
-- 退款功能
-
-### 2. React管理后台
-- 创建React项目
-- 使用Ant Design UI库
-- 实现商品管理页面
-- 实现订单管理页面
-- 实现数据统计页面
-
-### 3. 云主机部署
-- 配置Nginx反向代理
-- 部署Node.js服务
-- 部署React管理后台
-- 配置SSL证书
-- 设置自动启动
-
-### 4. 小程序更新
-- 更新API基础URL
-- 测试所有接口功能
-- 确保支付流程正常
-- 用户体验测试
-
-## GitHub Actions CI/CD
-
-建议的部署流程：
-
-```yaml
-name: Deploy to Cloud Server
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '18'
-    - name: Install dependencies
-      run: npm install
-    - name: Run tests
-      run: npm test
-
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-    - name: Deploy to server
-      run: |
-        # 部署脚本
-        scp -r ./ user@server:/path/to/app
-        ssh user@server "cd /path/to/app && npm install && npm run build && pm2 restart app"
-```
-
-## 环境变量配置
-
-```env
-# 服务器配置
-NODE_ENV=production
-PORT=3000
-HOST=0.0.0.0
-
-# 数据库配置
-DB_HOST=152.136.13.33
-DB_PORT=1433
-DB_NAME=MiniAppEcommerce
-DB_USER=sa
-DB_PASSWORD=YourStrong@Passw0rd
-
-# JWT配置
-JWT_SECRET=your-super-secret-jwt-key
-JWT_EXPIRES_IN=7d
-
-# 微信小程序配置
-WECHAT_APP_ID=your-wechat-app-id
-WECHAT_APP_SECRET=your-wechat-app-secret
-
-# 微信支付配置
-WECHAT_MCH_ID=your-merchant-id
-WECHAT_API_KEY=your-api-key
-```
-
-## 监控和维护
-
-### 日志管理
-- 使用PM2管理进程
-- 配置日志轮转
-- 监控错误日志
-
-### 备份策略
-- 数据库定期备份
-- 文件系统备份
-- 配置文件备份
-
-### 性能优化
-- 数据库索引优化
-- API响应缓存
-- 图片CDN加速
-
-## 安全考虑
-
-1. **API安全**
-   - JWT令牌验证
-   - 请求频率限制
-   - 输入数据验证
-
-2. **数据库安全**
-   - 连接加密
-   - 定期更新密码
-   - 最小权限原则
-
-3. **文件上传安全**
-   - 文件类型验证
-   - 大小限制
-   - 病毒扫描
-
-## 联系支持
-
-如果在部署过程中遇到问题，请参考：
-1. 项目README文件
-2. API文档
-3. 数据库schema文件
-4. 错误日志
+## 常见问题排查
+- **访问 404**：确认访问路径是否包含 `/jinhengtai/` 前缀，或确认 DNS 已指向服务器
+- **证书无效**：检查 `/etc/letsencrypt/live/` 与 `deploy/certs/` 是否同步更新；必要时重新执行续期脚本
+- **API 超时/错误**：使用 `sudo docker compose logs -f api` 查看 FastAPI 日志，确认数据库连通性
+- **数据库无法连接**：确保 `mssql` 容器运行正常，并在 `.env` 中使用容器内网地址（例：`mssql`）
 
 ---
 
-**部署状态**: ✅ 后端API完成 | ⏳ 管理后台开发中 | ⏳ 支付集成待完成
+最近更新：新增 `https://yidasoftware.xyz/jinhengtai/` 域名转发支持与 Nginx 配置说明（2025-11-11）
