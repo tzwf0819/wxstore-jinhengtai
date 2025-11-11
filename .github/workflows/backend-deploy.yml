@@ -40,7 +40,7 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y curl gnupg
         curl -sS https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-        curl -sS https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list >/dev/null
+        curl -sS https://packages.microsoft.com/config/ubuntu/20.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list >/dev/null
         sudo apt-get update
         sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18 unixodbc unixodbc-dev
         echo "/opt/mssql-tools18/bin" >> $GITHUB_PATH
@@ -53,7 +53,7 @@ jobs:
         DB_PASSWORD: ${{ secrets.JINHENGTAI_DB_PASSWORD }}
         DB_NAME: ${{ secrets.JINHENGTAI_DB_NAME }}
       run: |
-        /opt/mssql-tools18/bin/sqlcmd -S "${DB_HOST},${DB_PORT}" -U "${DB_USER}" -P "${DB_PASSWORD}" -Q "IF DB_ID(N'${DB_NAME}') IS NULL BEGIN EXEC('CREATE DATABASE [${DB_NAME}]'); END"
+        /opt/mssql-tools18/bin/sqlcmd -C -S "${DB_HOST},${DB_PORT}" -U "${DB_USER}" -P "${DB_PASSWORD}" -Q "IF DB_ID(N'${DB_NAME}') IS NULL BEGIN EXEC('CREATE DATABASE [${DB_NAME}]'); END"
 
     - name: Create deployment package
       working-directory: backend
