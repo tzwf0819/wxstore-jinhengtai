@@ -146,37 +146,37 @@ jobs:
 
           echo "Writing environment variables..."
           sudo tee "${BACKEND_DIR}/.env" > /dev/null <<EOF
-APP_NAME=Jinhengtai Mall Backend
-DEBUG=false
-SQL_SERVER_HOST=${{ secrets.JINHENGTAI_DB_HOST }}
-SQL_SERVER_PORT=${{ secrets.JINHENGTAI_DB_PORT }}
-SQL_SERVER_USER=${{ secrets.JINHENGTAI_DB_USER }}
-SQL_SERVER_PASSWORD=${{ secrets.JINHENGTAI_DB_PASSWORD }}
-SQL_SERVER_DATABASE=${{ secrets.JINHENGTAI_DB_NAME }}
-SQL_SERVER_DRIVER=ODBC Driver 18 for SQL Server
-EOF
+          APP_NAME=Jinhengtai Mall Backend
+          DEBUG=false
+          SQL_SERVER_HOST=${{ secrets.JINHENGTAI_DB_HOST }}
+          SQL_SERVER_PORT=${{ secrets.JINHENGTAI_DB_PORT }}
+          SQL_SERVER_USER=${{ secrets.JINHENGTAI_DB_USER }}
+          SQL_SERVER_PASSWORD=${{ secrets.JINHENGTAI_DB_PASSWORD }}
+          SQL_SERVER_DATABASE=${{ secrets.JINHENGTAI_DB_NAME }}
+          SQL_SERVER_DRIVER=ODBC Driver 18 for SQL Server
+          EOF
 
           echo "Setting permissions..."
           sudo chown -R "${SERVICE_USER}:${SERVICE_USER}" "${BACKEND_DIR}"
 
           echo "Creating systemd service..."
           sudo tee /etc/systemd/system/jinhengtai-backend.service > /dev/null <<SERVICE
-[Unit]
-Description=Jinhengtai FastAPI Backend
-After=network.target
+          [Unit]
+          Description=Jinhengtai FastAPI Backend
+          After=network.target
 
-[Service]
-Type=simple
-User=${SERVICE_USER}
-WorkingDirectory=${BACKEND_DIR}
-EnvironmentFile=${BACKEND_DIR}/.env
-ExecStart=${BACKEND_DIR}/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
-Restart=always
-RestartSec=5
+          [Service]
+          Type=simple
+          User=${SERVICE_USER}
+          WorkingDirectory=${BACKEND_DIR}
+          EnvironmentFile=${BACKEND_DIR}/.env
+          ExecStart=${BACKEND_DIR}/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
+          Restart=always
+          RestartSec=5
 
-[Install]
-WantedBy=multi-user.target
-SERVICE
+          [Install]
+          WantedBy=multi-user.target
+          SERVICE
 
           echo "Reloading systemd and restarting service..."
           sudo systemctl daemon-reload
