@@ -1,147 +1,108 @@
 /**
  * 用户服务
  */
+import { request } from './request';
 
-const db = wx.cloud.database();
-const _ = db.command;
+const AUTH_ENDPOINT = '/auth';
+const USER_ENDPOINT = '/users/me';
+const ORDER_STATS_ENDPOINT = '/orders/stats';
+
+const resolveHeaders = () => {
+  const app = getApp();
+  const token = app?.getAuthToken?.();
+  return token
+    ? {
+        Authorization: `Bearer ${token}`
+      }
+    : {};
+};
+
+/**
+ * 登录并获取 Token
+ */
+export const loginWithCode = async (code, userInfo = {}) => {
+  const payload = {
+    code,
+    avatar: userInfo.avatarUrl,
+    nickname: userInfo.nickName,
+    gender: userInfo.gender,
+    city: userInfo.city,
+    province: userInfo.province,
+    country: userInfo.country,
+    language: userInfo.language
+  };
+
+  const data = await request({
+    url: `${AUTH_ENDPOINT}/wx-login`,
+    method: 'POST',
+    data: payload
+  });
+
+  const app = getApp();
+  app?.setAuthToken?.(data.token);
+  app?.setUserProfile?.(data.user);
+
+  return data;
+};
 
 /**
  * 获取用户信息
  */
 export const getUserInfo = async () => {
-	try {
-		const { result } = await wx.cloud.callFunction({
-			name: 'getOpenId',
-		});
+  try {
+    const data = await request({
+      url: USER_ENDPOINT,
+      headers: resolveHeaders()
+    });
 
-		if (!result || !result.openid) {
-			throw new Error('获取openid失败');
-		}
-
-		const { data } = await db
-			.collection('users')
-			.where({
-				_openid: result.openid,
-			})
-			.get();
-
-		return data[0] || null;
-	} catch (error) {
-		console.error('获取用户信息失败：', error);
-		return null;
-	}
+    const app = getApp();
+    app?.setUserProfile?.(data);
+    return data;
+  } catch (error) {
+    console.error('获取用户信息失败：', error);
+    return null;
+  }
 };
 
 /**
  * 更新用户信息
- * @param {Object} userInfo - 微信用户信息
  */
-export const updateUserInfo = async (userInfo) => {
-	try {
-		const { result } = await wx.cloud.callFunction({
-			name: 'getOpenId',
-		});
+export const updateUserInfo = async (profile) => {
+  try {
+    const data = await request({
+      url: USER_ENDPOINT,
+      method: 'PUT',
+      data: profile,
+      headers: resolveHeaders()
+    });
 
-		if (!result || !result.openid) {
-			throw new Error('获取openid失败');
-		}
-
-		const { data } = await db
-			.collection('users')
-			.where({
-				_openid: result.openid,
-			})
-			.get();
-
-		// 处理头像字段，将avatarUrl映射为avatar
-		const userData = {
-			...userInfo,
-			avatar: userInfo.avatarUrl,
-			lastLogin: new Date(),
-		};
-
-		if (data.length === 0) {
-			// 新用户，创建记录
-			return await db.collection('users').add({
-				data: {
-					...userData,
-					createTime: new Date(),
-				},
-			});
-		} else {
-			// 更新现有用户信息
-			return await db
-				.collection('users')
-				.where({
-					_openid: result.openid,
-				})
-				.update({
-					data: userData,
-				});
-		}
-	} catch (error) {
-		console.error('更新用户信息失败：', error);
-		throw error;
-	}
+    const app = getApp();
+    app?.setUserProfile?.(data);
+    return data;
+  } catch (error) {
+    console.error('更新用户信息失败：', error);
+    throw error;
+  }
 };
 
 /**
  * 获取用户订单统计
  */
 export const getOrderStats = async () => {
-	try {
-		const { result } = await wx.cloud.callFunction({
-			name: 'getOpenId',
-		});
+  try {
+    const data = await request({
+      url: ORDER_STATS_ENDPOINT,
+      headers: resolveHeaders()
+    });
 
-		if (!result || !result.openid) {
-			return {
-				pendingPayment: 0,
-				pendingDelivery: 0,
-				pendingReceipt: 0,
-				completed: 0,
-			};
-		}
-
-		const { data } = await db
-			.collection('orders')
-			.where({
-				_openid: result.openid,
-			})
-			.get();
-
-		const stats = {
-			pendingPayment: 0,
-			pendingDelivery: 0,
-			pendingReceipt: 0,
-			completed: 0,
-		};
-
-		data.forEach((order) => {
-			switch (order.status) {
-				case 'PENDING_PAYMENT': // 待支付状态：订单已创建但尚未完成支付
-					stats.pendingPayment++;
-					break;
-				case 'PENDING_DELIVERY': // 待发货状态：订单已支付但商家尚未发货
-					stats.pendingDelivery++;
-					break;
-				case 'PENDING_RECEIPT': // 待收货状态：商家已发货但用户尚未确认收货
-					stats.pendingReceipt++;
-					break;
-				case 'COMPLETED': // 已完成状态：订单已完成全部流程（已收货）
-					stats.completed++;
-					break;
-			}
-		});
-
-		return stats;
-	} catch (error) {
-		console.error('获取订单统计失败：', error);
-		return {
-			pendingPayment: 0,
-			pendingDelivery: 0,
-			pendingReceipt: 0,
-			completed: 0,
-		};
-	}
+    return data;
+  } catch (error) {
+    console.error('获取订单统计失败：', error);
+    return {
+      pendingPayment: 0,
+      pendingDelivery: 0,
+      pendingReceipt: 0,
+      completed: 0
+    };
+  }
 };

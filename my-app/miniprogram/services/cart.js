@@ -1,129 +1,105 @@
 /**
  * 购物车服务
  */
+import { request } from './request';
 
-const db = wx.cloud.database();
-const cartCollection = db.collection('cart');
-const _ = db.command;
+const CART_ENDPOINT = '/cart';
+
+const resolveHeaders = () => {
+  const app = getApp();
+  const token = app?.getAuthToken?.();
+  return token
+    ? {
+        Authorization: `Bearer ${token}`
+      }
+    : {};
+};
 
 /**
  * 添加商品到购物车
- * @param {Object} product - 商品信息
- * @param {Number} count - 商品数量
- * @returns {Promise} - 添加结果
  */
-export const addToCart = async (product, count = 1) => {
+export const addToCart = async (productId, count = 1, skuId = null) => {
   try {
-    // 获取当前用户的openid
-    const { result } = await wx.cloud.callFunction({
-      name: 'getOpenId'
+    const payload = {
+      product_id: productId,
+      quantity: count,
+      sku_id: skuId
+    };
+    const data = await request({
+      url: CART_ENDPOINT,
+      method: 'POST',
+      data: payload,
+      headers: resolveHeaders()
     });
-    const openid = result.openid;
-    
-    // 查询购物车中是否已存在该商品
-    const res = await cartCollection.where({
-      _openid: openid,
-      productId: product._id
-    }).get();
-    
-    if (res.data.length > 0) {
-      // 商品已存在，更新数量
-      const cartItem = res.data[0];
-      return await cartCollection.doc(cartItem._id).update({
-        data: {
-          count: _.inc(count)
-        }
-      });
-    } else {
-      // 商品不存在，添加新记录
-      return await cartCollection.add({
-        data: {
-          productId: product._id,
-          name: product.name,
-          price: product.price,
-          coverUrl: product.coverUrl,
-          count: count,
-          selected: true,
-          createTime: db.serverDate()
-        }
-      });
-    }
+    return data;
   } catch (error) {
     console.error('添加到购物车失败', error);
     throw error;
   }
-}
+};
 
 /**
  * 获取购物车列表
- * @returns {Promise} - 购物车列表
  */
 export const getCartList = async () => {
   try {
-    const { result } = await wx.cloud.callFunction({
-      name: 'getOpenId'
+    const data = await request({
+      url: CART_ENDPOINT,
+      headers: resolveHeaders()
     });
-    const openid = result.openid;
-    
-    const res = await cartCollection.where({
-      _openid: openid
-    }).orderBy('createTime', 'desc').get();
-      
-    return res.data;
+    return data;
   } catch (error) {
     console.error('获取购物车列表失败', error);
     throw error;
   }
-}
+};
 
 /**
  * 更新购物车商品数量
- * @param {String} id - 购物车项ID
- * @param {Number} count - 新的数量
- * @returns {Promise} - 更新结果
  */
-export const updateCartItemCount = async (id, count) => {
+export const updateCartItemCount = async (itemId, count) => {
   try {
-    return await cartCollection.doc(id).update({
-      data: {
-        count: count
-      }
+    return await request({
+      url: `${CART_ENDPOINT}/${itemId}`,
+      method: 'PUT',
+      data: { quantity: count },
+      headers: resolveHeaders()
     });
   } catch (error) {
     console.error('更新购物车商品数量失败', error);
     throw error;
   }
-}
+};
 
 /**
  * 删除购物车商品
- * @param {String} id - 购物车项ID
- * @returns {Promise} - 删除结果
  */
-export const removeFromCart = async (id) => {
+export const removeFromCart = async (itemId) => {
   try {
-    return await cartCollection.doc(id).remove();
+    return await request({
+      url: `${CART_ENDPOINT}/${itemId}`,
+      method: 'DELETE',
+      headers: resolveHeaders()
+    });
   } catch (error) {
     console.error('删除购物车商品失败', error);
     throw error;
   }
-}
+};
 
 /**
  * 更新购物车商品选中状态
- * @param {String} id - 购物车项ID
- * @param {Boolean} selected - 选中状态
- * @returns {Promise} - 更新结果
  */
-export const updateCartItemSelected = async (id, selected) => {
+export const updateCartItemSelected = async (itemId, selected) => {
   try {
-    return await cartCollection.doc(id).update({
-      data: {
-        selected: selected
-      }
+    return await request({
+      url: `${CART_ENDPOINT}/${itemId}/selection`,
+      method: 'PATCH',
+      data: { selected },
+      headers: resolveHeaders()
     });
   } catch (error) {
     console.error('更新购物车商品选中状态失败', error);
     throw error;
   }
-}
+};

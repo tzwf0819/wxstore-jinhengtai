@@ -5,9 +5,9 @@
     "include": []
   },
   "miniprogramRoot": "miniprogram/",
-  "cloudfunctionRoot": "cloudfunctions/",
+  "cloudfunctionRoot": "",
   "cloudbaseRoot": "./",
-  "cloudenv": "we-store-0gjsggk971fc5d71",
+  "cloudenv": "",
   "setting": {
     "urlCheck": true,
     "es6": true,
