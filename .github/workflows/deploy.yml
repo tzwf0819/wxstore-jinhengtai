@@ -76,12 +76,10 @@ jobs:
           sudo cp /home/${{ secrets.JINHENGTAI_USERNAME }}/cloudbase/backend/deploy/nginx/conf.d/api.conf "${PROJECT_DIR}/deploy/nginx/conf.d/api.conf" 2>/dev/null || true
           sudo cp /home/${{ secrets.JINHENGTAI_USERNAME }}/cloudbase/backend/docker-compose.yml "${PROJECT_DIR}/docker-compose.yml" 2>/dev/null || true
 
-          if [ ! -f "${PROJECT_DIR}/.env" ]; then
-            echo "Creating docker-compose .env"
-            sudo tee "${PROJECT_DIR}/.env" > /dev/null <<ENVFILE
-            SQL_SERVER_PASSWORD=${{ secrets.JINHENGTAI_DB_PASSWORD }}
-            ENVFILE
-          fi
+          SQL_PASSWORD="${{ secrets.JINHENGTAI_DB_PASSWORD }}"
+          cat <<EOF | sudo tee "${PROJECT_DIR}/.env" > /dev/null
+          SQL_SERVER_PASSWORD=${SQL_PASSWORD:-YourStrong@Passw0rd}
+          EOF
 
           if command -v docker >/dev/null 2>&1; then
             cd "${PROJECT_DIR}"

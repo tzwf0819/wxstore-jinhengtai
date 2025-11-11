@@ -261,6 +261,8 @@ jobs:
           fi
 
           BACKEND_DOCKER_DIR="/opt/jinhengtai-backend"
+          DOCKER_SQL_PASS="${{ secrets.JINHENGTAI_DB_PASSWORD }}"
+
           if [ -f "${BACKEND_DIR}/deploy/nginx/conf.d/api.conf" ]; then
             echo "Updating docker-compose Nginx configuration..."
             sudo mkdir -p "${BACKEND_DOCKER_DIR}/deploy/nginx/conf.d"
@@ -271,12 +273,9 @@ jobs:
             echo "Updating docker-compose bundle..."
             sudo mkdir -p "${BACKEND_DOCKER_DIR}"
             sudo cp "${BACKEND_DIR}/docker-compose.yml" "${BACKEND_DOCKER_DIR}/docker-compose.yml"
-            if [ ! -f "${BACKEND_DOCKER_DIR}/.env" ]; then
-              echo "Generating docker-compose .env file for MSSQL"
-              sudo tee "${BACKEND_DOCKER_DIR}/.env" > /dev/null <<ENVFILE
-              SQL_SERVER_PASSWORD=${{ secrets.JINHENGTAI_DB_PASSWORD }}
-              ENVFILE
-            fi
+            cat <<EOF | sudo tee "${BACKEND_DOCKER_DIR}/.env" > /dev/null
+              SQL_SERVER_PASSWORD=${DOCKER_SQL_PASS:-YourStrong@Passw0rd}
+              EOF
           fi
 
           if command -v docker >/dev/null 2>&1; then
