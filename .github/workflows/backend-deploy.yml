@@ -31,6 +31,12 @@ jobs:
 
     - name: Run tests
       working-directory: backend
+      env:
+        SQL_SERVER_HOST: ${{ secrets.JINHENGTAI_DB_HOST }}
+        SQL_SERVER_PORT: ${{ secrets.JINHENGTAI_DB_PORT }}
+        SQL_SERVER_USER: ${{ secrets.JINHENGTAI_DB_USER }}
+        SQL_SERVER_PASSWORD: ${{ secrets.JINHENGTAI_DB_PASSWORD }}
+        SQL_SERVER_DATABASE: ${{ secrets.JINHENGTAI_DB_NAME }}
       run: pytest
 
     - name: Install SQL Server tools on runner
