@@ -4,8 +4,7 @@ on:
   push:
     branches: [ main ]
     paths:
-      - backend/**
-      - database/**
+      - 'backend/**'
   workflow_dispatch:
 
 jobs:
@@ -23,7 +22,7 @@ jobs:
         cache: pip
         cache-dependency-path: backend/requirements.txt
 
-    - name: Install dependencies
+    - name: Install dependencies (for testing)
       working-directory: backend
       run: |
         python -m pip install --upgrade pip
@@ -39,259 +38,79 @@ jobs:
         SQL_SERVER_DATABASE: ${{ secrets.JINHENGTAI_DB_NAME }}
       run: pytest
 
-    - name: Install SQL Server tools on runner
-      env:
-        ACCEPT_EULA: "Y"
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y curl gnupg
-        curl -sS https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-        curl -sS https://packages.microsoft.com/config/ubuntu/20.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list >/dev/null
-        sudo apt-get update
-        sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18 unixodbc unixodbc-dev
-        echo "/opt/mssql-tools18/bin" >> $GITHUB_PATH
-
-    - name: Ensure SQL Server database exists
-      env:
-        DB_HOST: ${{ secrets.JINHENGTAI_DB_HOST }}
-        DB_PORT: ${{ secrets.JINHENGTAI_DB_PORT }}
-        DB_USER: ${{ secrets.JINHENGTAI_DB_USER }}
-        DB_PASSWORD: ${{ secrets.JINHENGTAI_DB_PASSWORD }}
-        DB_NAME: ${{ secrets.JINHENGTAI_DB_NAME }}
-      run: |
-        /opt/mssql-tools18/bin/sqlcmd -C -S "${DB_HOST},${DB_PORT}" -U "${DB_USER}" -P "${DB_PASSWORD}" -Q "IF DB_ID(N'${DB_NAME}') IS NULL BEGIN EXEC('CREATE DATABASE [${DB_NAME}]'); END"
-
     - name: Create deployment package
       working-directory: backend
       run: |
-        tar -czf ../backend-deploy.tar.gz \
-          --exclude=__pycache__ \
-          --exclude=.venv \
-          --exclude=.env \
-          --exclude=tests \
-          --exclude='*.pyc' \
-          .
+        tar -czf ../backend-deploy.tar.gz .
 
-    - name: Deploy backend to cloud host
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.JINHENGTAI_HOST }}
-        username: ${{ secrets.JINHENGTAI_USERNAME }}
-        password: ${{ secrets.JINHENGTAI_PASSWORD }}
-        port: 22
-        source: backend-deploy.tar.gz
-        target: /tmp/
-        strip_components: 0
-
-    - name: Setup backend on server
+    - name: Deploy to Server
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.JINHENGTAI_HOST }}
         username: ${{ secrets.JINHENGTAI_USERNAME }}
         password: ${{ secrets.JINHENGTAI_PASSWORD }}
         port: 22
-        timeout: 600s
+        timeout: 120s
         script: |
-          set -euo pipefail
+          # Upload the package first
+          cat <<'EOF' > /tmp/backend-deploy.tar.gz
+          ${{ toJSON(open('backend-deploy.tar.gz')) }}
+          EOF
 
+          set -euo pipefail
+          
+          # --- Configuration ---
           PROJECT_DIR="/opt/cloudbase"
           BACKEND_DIR="${PROJECT_DIR}/backend"
+          VENV_DIR="${PROJECT_DIR}/venv"
+          SERVICE_NAME="jinhengtai-backend" # IMPORTANT: Assumed systemd service name
           TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
-          SERVICE_USER="${{ secrets.JINHENGTAI_USERNAME }}"
 
-          echo "Starting backend deployment at ${TIMESTAMP}"
+          echo "--- Starting backend deployment at ${TIMESTAMP} ---"
 
-          sudo mkdir -p "${PROJECT_DIR}" "${PROJECT_DIR}/logs" "${PROJECT_DIR}/uploads"
+          # --- Create required directories ---
+          sudo mkdir -p "${PROJECT_DIR}" "${PROJECT_DIR}/backup"
+
+          # --- Backup existing backend (if it exists) ---
+          if [ -d "${BACKEND_DIR}" ]; then
+              echo "Backing up existing backend to /opt/cloudbase/backup/backend_${TIMESTAMP}"
+              sudo mv "${BACKEND_DIR}" "/opt/cloudbase/backup/backend_${TIMESTAMP}"
+          fi
+          
+          # --- Extract new backend code ---
+          echo "Extracting new backend code to ${BACKEND_DIR}"
           sudo mkdir -p "${BACKEND_DIR}"
+          sudo tar -xzf "/tmp/backend-deploy.tar.gz" -C "${BACKEND_DIR}"
+          sudo rm "/tmp/backend-deploy.tar.gz"
 
-          if [ -d "${BACKEND_DIR}" ] && [ "$(ls -A "${BACKEND_DIR}")" ]; then
-            echo "Backing up existing backend..."
-            sudo mkdir -p /opt/cloudbase/backup
-            sudo cp -r "${BACKEND_DIR}" "/opt/cloudbase/backup/backend_${TIMESTAMP}"
+          # --- Setup Python Virtual Environment ---
+          # Note: Assumes Python 3.8+ (as python3) and python3-venv are pre-installed on the server.
+          if [ ! -d "${VENV_DIR}" ]; then
+              echo "Creating Python virtual environment at ${VENV_DIR}"
+              sudo python3 -m venv "${VENV_DIR}"
           fi
 
-          echo "Extracting new backend..."
-          cd /tmp
-          sudo tar -xzf backend-deploy.tar.gz -C "${BACKEND_DIR}" --strip-components=1
+          # --- Install/Update Python dependencies ---
+          echo "Installing Python dependencies from requirements.txt"
+          sudo "${VENV_DIR}/bin/pip" install --upgrade pip
+          sudo "${VENV_DIR}/bin/pip" install -r "${BACKEND_DIR}/requirements.txt"
 
-          echo "Installing ODBC dependencies..."
-          if command -v apt-get >/dev/null 2>&1; then
-            sudo apt-get update
-            sudo apt-get install -y curl gnupg unixodbc unixodbc-dev
-            if [ ! -f /etc/apt/sources.list.d/mssql-release.list ]; then
-              curl -sS https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-              curl -sS https://packages.microsoft.com/config/ubuntu/20.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list >/dev/null
-              sudo apt-get update
-            fi
-            sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 || true
-          elif command -v dnf >/dev/null 2>&1; then
-            sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
-            sudo tee /etc/yum.repos.d/mssql-release.repo > /dev/null <<'EOF'
-          [packages-microsoft-com-prod]
-          name=Microsoft Packages
-          baseurl=https://packages.microsoft.com/rhel/8/prod/
-          enabled=1
-          gpgcheck=1
-          gpgkey=https://packages.microsoft.com/keys/microsoft.asc
-          EOF
-            sudo dnf remove -y unixODBC-utf16 unixODBC-utf16-devel || true
-            sudo dnf install -y unixODBC unixODBC-devel
-            sudo ACCEPT_EULA=Y dnf install -y msodbcsql18 mssql-tools18 || true
-          elif command -v yum >/dev/null 2>&1; then
-            sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
-            sudo tee /etc/yum.repos.d/mssql-release.repo > /dev/null <<'EOF'
-          [packages-microsoft-com-prod]
-          name=Microsoft Packages
-          baseurl=https://packages.microsoft.com/rhel/7/prod/
-          enabled=1
-          gpgcheck=1
-          gpgkey=https://packages.microsoft.com/keys/microsoft.asc
-          EOF
-            sudo yum remove -y unixODBC-utf16 unixODBC-utf16-devel || true
-            sudo yum install -y unixODBC unixODBC-devel
-            sudo ACCEPT_EULA=Y yum install -y msodbcsql18 mssql-tools18 || true
-          else
-            echo "Unsupported package manager. Install ODBC dependencies manually." >&2
-            exit 1
-          fi
-
-          echo "Ensuring Python 3.8+ is available..."
-
-          ensure_python() {
-            PYTHON_BIN=""
-            for candidate in python3.11 python3.10 python3.9 python3.8 python3; do
-              if command -v "${candidate}" >/dev/null 2>&1; then
-                if "${candidate}" -c 'import sys; exit(0 if sys.version_info >= (3, 8) else 1)'; then
-                  PYTHON_BIN="${candidate}"
-                  break
-                fi
-              fi
-            done
-          }
-
-          ensure_python
-
-          if [ -z "${PYTHON_BIN:-}" ]; then
-            echo "Installing a newer Python runtime..."
-            if command -v apt-get >/dev/null 2>&1; then
-              sudo apt-get update
-              sudo apt-get install -y software-properties-common
-              sudo add-apt-repository -y ppa:deadsnakes/ppa
-              sudo apt-get update
-              sudo apt-get install -y python3.11 python3.11-venv python3.11-dev python3.11-distutils
-            elif command -v dnf >/dev/null 2>&1; then
-              sudo dnf install -y python3.11 python3.11-devel python3.11-pip || true
-              sudo dnf install -y python3.10 python3.10-devel python3.10-pip || true
-              sudo dnf module -y enable python39 || true
-              sudo dnf install -y python39 python39-devel python39-pip || true
-            elif command -v yum >/dev/null 2>&1; then
-              sudo yum install -y python3.11 python3.11-devel python3.11-pip || \
-              sudo yum install -y python3.10 python3.10-devel python3.10-pip || \
-              sudo yum install -y python39 python39-devel python39-pip || \
-              sudo yum install -y python3 python3-pip python3-virtualenv
-            else
-              echo "Unsupported package manager. Install Python 3.8+ manually." >&2
-              exit 1
-            fi
-            ensure_python
-          fi
-
-          if [ -z "${PYTHON_BIN:-}" ]; then
-            echo "Failed to provision Python 3.8+ automatically. Please install it manually." >&2
-            exit 1
-          fi
-
-          PYTHON_VERSION_OUTPUT="$(${PYTHON_BIN} --version)"
-          echo "Using Python interpreter: ${PYTHON_BIN} (${PYTHON_VERSION_OUTPUT})"
-
-          echo "Creating Python environment..."
-          cd "${BACKEND_DIR}"
-          sudo rm -rf .venv
-          "${PYTHON_BIN}" -m venv .venv
-          source .venv/bin/activate
-          python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
-          deactivate
-
-          echo "Writing environment variables..."
+          # --- Create .env file from GitHub Secrets ---
+          echo "Creating .env file for the application"
           sudo tee "${BACKEND_DIR}/.env" > /dev/null <<EOF
-            APP_NAME=Jinhengtai Mall Backend
-            DEBUG=false
-            SQL_SERVER_HOST=${{ secrets.JINHENGTAI_DB_HOST }}
-            SQL_SERVER_PORT=${{ secrets.JINHENGTAI_DB_PORT }}
-            SQL_SERVER_USER=${{ secrets.JINHENGTAI_DB_USER }}
-            SQL_SERVER_PASSWORD=${{ secrets.JINHENGTAI_DB_PASSWORD }}
-            SQL_SERVER_DATABASE=${{ secrets.JINHENGTAI_DB_NAME }}
-            SQL_SERVER_DRIVER=ODBC Driver 18 for SQL Server
+          # This file is automatically generated during deployment
+          SQL_SERVER_HOST=${{ secrets.JINHENGTAI_DB_HOST }}
+          SQL_SERVER_PORT=${{ secrets.JINHENGTAI_DB_PORT }}
+          SQL_SERVER_USER=${{ secrets.JINHENGTAI_DB_USER }}
+          SQL_SERVER_PASSWORD='${{ secrets.JINHENGTAI_DB_PASSWORD }}'
+          SQL_SERVER_DATABASE=${{ secrets.JINHENGTAI_DB_NAME }}
           EOF
-          sudo sed -i 's/^[[:space:]]\+//' "${BACKEND_DIR}/.env"
 
-          echo "Setting permissions..."
-          sudo chown -R "${SERVICE_USER}:${SERVICE_USER}" "${BACKEND_DIR}"
-
-          echo "Creating systemd service..."
-          sudo tee /etc/systemd/system/jinhengtai-backend.service > /dev/null <<SERVICE
-          [Unit]
-          Description=Jinhengtai FastAPI Backend
-          After=network.target
-
-          [Service]
-          Type=simple
-          User=${SERVICE_USER}
-          WorkingDirectory=${BACKEND_DIR}
-          EnvironmentFile=${BACKEND_DIR}/.env
-          ExecStart=${BACKEND_DIR}/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
-          Restart=always
-          RestartSec=5
-
-          [Install]
-          WantedBy=multi-user.target
-          SERVICE
-          sudo sed -i 's/^[[:space:]]\\+//' /etc/systemd/system/jinhengtai-backend.service
-
-          echo "Reloading systemd and restarting service..."
+          # --- Restart the backend service ---
+          # Note: Assumes a systemd service named '${SERVICE_NAME}' is configured.
+          echo "Restarting the backend service (${SERVICE_NAME})"
           sudo systemctl daemon-reload
-          sudo systemctl enable jinhengtai-backend.service --now
-          sudo systemctl restart jinhengtai-backend.service
+          sudo systemctl restart "${SERVICE_NAME}"
+          sudo systemctl status "${SERVICE_NAME}" --no-pager
 
-          echo "Cleaning up deployment package..."
-          sudo rm -f /tmp/backend-deploy.tar.gz
-
-          echo "Checking service status..."
-          sudo systemctl status --no-pager jinhengtai-backend.service || true
-          sudo journalctl -u jinhengtai-backend.service -n 50 --no-pager || true
-
-          BACKEND_DOCKER_DIR="/opt/jinhengtai-backend"
-          DOCKER_SQL_PASS="${{ secrets.JINHENGTAI_DB_PASSWORD }}"
-
-          if [ -f "${BACKEND_DIR}/deploy/nginx/conf.d/api.conf" ]; then
-            echo "Updating docker-compose Nginx configuration..."
-            sudo mkdir -p "${BACKEND_DOCKER_DIR}/deploy/nginx/conf.d"
-            sudo cp "${BACKEND_DIR}/deploy/nginx/conf.d/api.conf" "${BACKEND_DOCKER_DIR}/deploy/nginx/conf.d/api.conf"
-          fi
-
-          if [ -f "${BACKEND_DIR}/docker-compose.yml" ]; then
-            echo "Updating docker-compose bundle..."
-            sudo mkdir -p "${BACKEND_DOCKER_DIR}"
-            sudo cp "${BACKEND_DIR}/docker-compose.yml" "${BACKEND_DOCKER_DIR}/docker-compose.yml"
-            cat <<EOF | sudo tee "${BACKEND_DOCKER_DIR}/.env" > /dev/null
-              SQL_SERVER_PASSWORD=${DOCKER_SQL_PASS:-YourStrong@Passw0rd}
-            EOF
-            sudo sed -i 's/^[[:space:]]\+//' "${BACKEND_DOCKER_DIR}/.env"
-          fi
-
-          if command -v docker >/dev/null 2>&1; then
-            if [ -f "${BACKEND_DOCKER_DIR}/docker-compose.yml" ]; then
-              echo "Recreating dockerized Nginx service..."
-              cd "${BACKEND_DOCKER_DIR}"
-              if command -v docker compose >/dev/null 2>&1; then
-                docker compose up -d --build --no-deps nginx
-              elif command -v docker-compose >/dev/null 2>&1; then
-                docker-compose up -d --build --no-deps nginx
-              else
-                echo "docker compose command not available; skip docker refresh" >&2
-              fi
-            fi
-          fi
-
-          echo "Backend deployment completed successfully!"
+          echo "--- Backend deployment finished successfully! ---"

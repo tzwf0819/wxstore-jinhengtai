@@ -1,16 +1,33 @@
 from pydantic import BaseModel
-from datetime import datetime
+from typing import List
 
-class OrderBase(BaseModel):
-    user_id: str
-    total_price: float
+# --- Schemas for creating an order ---
+class OrderItemCreate(BaseModel):
+    product_id: int
+    quantity: int
 
-class OrderCreate(OrderBase):
-    pass
+class OrderCreate(BaseModel):
+    items: List[OrderItemCreate]
+    shipping_address: str
+    shipping_contact: str
 
-class Order(OrderBase):
-    id: int
-    created_at: datetime
+# --- Schemas for reading an order ---
+class OrderItemRead(BaseModel):
+    product_id: int
+    quantity: int
+    price: float
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+class OrderRead(BaseModel):
+    id: int
+    user_id: int
+    total_amount: float
+    status: str
+    shipping_address: str
+    shipping_contact: str
+    items: List[OrderItemRead] = []
+
+    class Config:
+        from_attributes = True

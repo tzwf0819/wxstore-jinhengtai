@@ -6,7 +6,7 @@
         <image
           class="avatar"
           mode="aspectFill"
-          src="{{userInfo.avatar || '/images/default-avatar.png'}}"
+          src="{{userInfo.avatarUrl || '/images/default-avatar.png'}}"
         ></image>
       </view>
       <view class="user-detail">
@@ -75,5 +75,5 @@
   </view>
 
   <!-- 退出登录按钮 -->
-  <view class="logout-button" bindtap="logout" wx:if="{{userInfo.nickName !== '点击登录'}}">退出登录</view>
+  <view class="logout-button" bindtap="logout" wx:if="{{userInfo}}">退出登录</view>
 </view>

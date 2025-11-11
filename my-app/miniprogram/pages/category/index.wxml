@@ -1,0 +1,27 @@
+<view class="category-container">
+  <!-- Left Sidebar for Categories -->
+  <scroll-view class="sidebar" scroll-y="true">
+    <view 
+      wx:for="{{categories}}" 
+      wx:key="id" 
+      class="sidebar-item {{activeCategory.id === item.id ? 'active' : ''}}"
+      bindtap="switchCategory"
+      data-category-id="{{item.id}}">
+      {{item.name}}
+    </view>
+  </scroll-view>
+
+  <!-- Right Content for Products -->
+  <scroll-view class="content" scroll-y="true">
+    <view class="product-grid">
+      <product-card 
+        wx:for="{{products}}" 
+        wx:key="id" 
+        product="{{item}}">
+      </product-card>
+    </view>
+    <view wx:if="{{products.length === 0}}" class="empty-state">
+      该分类下暂无商品
+    </view>
+  </scroll-view>
+</view>

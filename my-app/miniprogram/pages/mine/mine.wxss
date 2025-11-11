@@ -46,6 +46,23 @@
   color: #999;
 }
 
+.login-btn {
+  /* Reset button styles */
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  line-height: inherit;
+  font-size: 36rpx;
+  font-weight: 500;
+  color: #333;
+  text-align: left;
+}
+
+.login-btn::after {
+  border: none;
+}
+
 /* 订单状态卡片样式 */
 .order-card {
   background-color: #ffffff;

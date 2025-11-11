@@ -72,11 +72,11 @@
       <view 
         class="product-item" 
         wx:for="{{productList}}" 
-        wx:key="_id" 
+        wx:key="id" 
         bindtap="onProductTap" 
-        data-id="{{item._id}}"
+        data-id="{{item.id}}"
       >
-        <image class="product-image" src="{{item.coverUrl}}" mode="aspectFill"></image>
+        <image class="product-image" src="{{item.image}}" mode="aspectFill"></image>
         <view class="product-info">
           <view class="product-name">{{item.name}}</view>
           <view class="product-desc">{{item.description}}</view>

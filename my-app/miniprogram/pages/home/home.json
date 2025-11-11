@@ -1,5 +1,6 @@
 {
   "usingComponents": {
-    "product-card": "/components/product-card/product-card"
+    "product-card": "../../components/product-card/product-card",
+    "home-content": "../../components/home-content/home-content"
   }
 }

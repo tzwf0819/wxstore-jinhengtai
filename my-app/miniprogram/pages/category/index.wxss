@@ -1,0 +1,64 @@
+.category-container {
+  display: flex;
+  height: 100vh; /* Full viewport height */
+}
+
+.sidebar {
+  width: 200rpx;
+  background-color: #f5f5f5;
+  height: 100%;
+}
+
+.sidebar-item {
+  padding: 30rpx 20rpx;
+  text-align: center;
+  font-size: 28rpx;
+  color: #333;
+  border-bottom: 1rpx solid #e0e0e0;
+  position: relative;
+}
+
+.sidebar-item.active {
+  background-color: #fff;
+  color: #6A5ACD; /* Your theme color */
+  font-weight: bold;
+}
+
+/* The little indicator bar on the left */
+.sidebar-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8rpx;
+  height: 40rpx;
+  background-color: #6A5ACD; /* Your theme color */
+}
+
+.content {
+  flex: 1;
+  height: 100%;
+  padding: 20rpx;
+  box-sizing: border-box;
+}
+
+.product-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+}
+
+/* Since product-card is a custom component, we need to ensure it fits the grid */
+.product-grid > product-card {
+  width: calc(50% - 10rpx);
+}
+
+.empty-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50vh;
+  color: #999;
+  font-size: 28rpx;
+}

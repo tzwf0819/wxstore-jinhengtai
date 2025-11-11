@@ -6,25 +6,6 @@
     <view class="product-price">¥{{product.price}}</view>
   </view>
 
-  <view class="specs" wx:if="{{product.specs.length > 0}}">
-    <view class="spec-group" wx:for="{{product.specs}}" wx:key="name" wx:for-item="spec">
-      <view class="spec-name">{{spec.name}}</view>
-      <view class="spec-options">
-        <view
-          wx:for="{{spec.options}}"
-          wx:key="*this"
-          wx:for-item="option"
-          class="spec-option {{ selectedSpec[spec.name] === option ? 'active' : '' }}"
-          data-spec-name="{{spec.name}}"
-          data-option="{{option}}"
-          bindtap="selectSpec"
-        >
-          {{option}}
-        </view>
-      </view>
-    </view>
-  </view>
-
   <view class="actions">
     <button class="add-to-cart-btn" bindtap="addToCart">加入购物车</button>
   </view>

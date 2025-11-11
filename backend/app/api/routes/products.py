@@ -49,3 +49,11 @@ def list_products(
     products: Sequence[Product] = db.scalars(statement).all()
 
     return [ProductRead.model_validate(product) for product in products]
+
+
+@router.get("/{product_id}", response_model=ProductRead, summary="Get a single product by ID")
+def get_product(product_id: int, db: Session = Depends(get_db)) -> ProductRead:
+    product = db.get(Product, product_id)
+    if not product or not product.is_active:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return ProductRead.model_validate(product)

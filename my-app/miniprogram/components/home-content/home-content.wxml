@@ -1,0 +1,39 @@
+<view class="container">
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <input placeholder="搜索商品" confirm-type="search" bindconfirm="onSearch" />
+  </view>
+
+  <!-- 轮播图 -->
+  <swiper class="swiper-container" indicator-dots="true" autoplay="true" interval="3000" duration="500">
+    <block wx:for="{{swiperList}}" wx:key="index">
+      <swiper-item>
+        <image src="{{item.image_url}}" class="swiper-image" mode="aspectFill"/>
+      </swiper-item>
+    </block>
+  </swiper>
+
+  <!-- 商品分类 -->
+  <view class="categories">
+    <view class="category-item" wx:for="{{categoryList}}" wx:key="index">
+      <image class="category-icon" src="{{item.icon}}" mode="aspectFit"></image>
+      <text class="category-text">{{item.name}}</text>
+    </view>
+  </view>
+
+  <!-- 推荐商品 -->
+  <view class="recommended">
+    <text class="section-title">推荐商品</text>
+    <view class="product-list">
+      <product-card wx:for="{{recommendedProducts}}" wx:key="id" product="{{item}}"></product-card>
+    </view>
+  </view>
+
+  <!-- 商品列表 -->
+  <view class="all-products">
+    <text class="section-title">所有商品</text>
+    <view class="product-list">
+      <product-card wx:for="{{allProducts}}" wx:key="id" product="{{item}}"></product-card>
+    </view>
+  </view>
+</view>
