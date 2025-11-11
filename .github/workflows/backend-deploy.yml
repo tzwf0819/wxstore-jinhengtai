@@ -209,15 +209,15 @@ jobs:
 
           echo "Writing environment variables..."
           sudo tee "${BACKEND_DIR}/.env" > /dev/null <<EOF
-            APP_NAME=Jinhengtai Mall Backend
-            DEBUG=false
-            SQL_SERVER_HOST=${{ secrets.JINHENGTAI_DB_HOST }}
-            SQL_SERVER_PORT=${{ secrets.JINHENGTAI_DB_PORT }}
-            SQL_SERVER_USER=${{ secrets.JINHENGTAI_DB_USER }}
-            SQL_SERVER_PASSWORD=${{ secrets.JINHENGTAI_DB_PASSWORD }}
-            SQL_SERVER_DATABASE=${{ secrets.JINHENGTAI_DB_NAME }}
-            SQL_SERVER_DRIVER=ODBC Driver 18 for SQL Server
-          EOF
+APP_NAME=Jinhengtai Mall Backend
+DEBUG=false
+SQL_SERVER_HOST=${{ secrets.JINHENGTAI_DB_HOST }}
+SQL_SERVER_PORT=${{ secrets.JINHENGTAI_DB_PORT }}
+SQL_SERVER_USER=${{ secrets.JINHENGTAI_DB_USER }}
+SQL_SERVER_PASSWORD=${{ secrets.JINHENGTAI_DB_PASSWORD }}
+SQL_SERVER_DATABASE=${{ secrets.JINHENGTAI_DB_NAME }}
+SQL_SERVER_DRIVER=ODBC Driver 18 for SQL Server
+EOF
 
           echo "Setting permissions..."
           sudo chown -R "${SERVICE_USER}:${SERVICE_USER}" "${BACKEND_DIR}"
@@ -267,8 +267,8 @@ jobs:
             sudo mkdir -p "${BACKEND_DOCKER_DIR}"
             sudo cp "${BACKEND_DIR}/docker-compose.yml" "${BACKEND_DOCKER_DIR}/docker-compose.yml"
             cat <<EOF | sudo tee "${BACKEND_DOCKER_DIR}/.env" > /dev/null
-              SQL_SERVER_PASSWORD=${DOCKER_SQL_PASS:-YourStrong@Passw0rd}
-            EOF
+SQL_SERVER_PASSWORD=${DOCKER_SQL_PASS:-YourStrong@Passw0rd}
+EOF
           fi
 
           if command -v docker >/dev/null 2>&1; then
