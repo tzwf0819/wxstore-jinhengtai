@@ -40,16 +40,27 @@ jobs:
             # 删除所有文件和隐藏文件，除了 .env.bak
             sudo find . -mindepth 1 ! -name '.env.bak' -exec rm -rf {} +
 
-            # 4. 下载最新的代码
-            echo "Downloading latest source code from main branch..."
-            wget -qO latest.zip "https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}/archive/refs/heads/main.zip"
-            unzip -q -o latest.zip
-            # 从解压出的带版本号的目录中，将所有文件（包括隐藏文件）移动到当前目录
-            EXTRACTED_DIR=$(unzip -Z1 latest.zip | head -1 | sed 's@/.*@@')
-            sudo mv "$EXTRACTED_DIR"/* .
-            sudo mv "$EXTRACTED_DIR"/.* . 2>/dev/null || true
-            rm latest.zip
-            rm -rf "$EXTRACTED_DIR"
+            # 4. 下载最新的代码 (Git Clone 方法)
+            echo "Cloning latest source code from main branch..."
+            # 确保服务器上安装了 git
+            echo "Ensuring git is installed..."
+            sudo apt-get update -y > /dev/null
+            sudo apt-get install -y git
+
+            # 创建一个临时目录进行克隆
+            TEMP_CLONE_DIR=$(mktemp -d)
+            echo "Cloning into temporary directory: $TEMP_CLONE_DIR"
+            # 使用 token 克隆代码到临时目录
+            sudo git clone --depth 1 https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git "$TEMP_CLONE_DIR"
+
+            # 将克隆下来的所有文件（包括隐藏文件）移动到当前项目目录
+            echo "Moving files into project directory..."
+            sudo mv "$TEMP_CLONE_DIR"/* .
+            sudo mv "$TEMP_CLONE_DIR"/.* . 2>/dev/null || true
+
+            # 清理临时目录
+            echo "Cleaning up..."
+            sudo rm -rf "$TEMP_CLONE_DIR"
 
             # 5. 恢复 .env 文件
             if [ -f ".env.bak" ]; then
