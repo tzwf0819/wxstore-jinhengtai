@@ -3,12 +3,12 @@
 {% block title %}{% if is_edit %}编辑商品{% else %}添加新商品{% endif %}{% endblock %}
 
 {% block sidebar %}
-    <a href="/jinhengtai/admin/products" class="secondary outline">← 返回商品列表</a>
+    <a href="/admin/products" class="secondary outline">← 返回商品列表</a>
 {% endblock %}
 
 {% block content %}
 <div class="form-container">
-    <form action="{% if is_edit %}/jinhengtai/admin/products/edit/{{ product.id }}{% else %}/jinhengtai/admin/products/new{% endif %}" method="post" enctype="multipart/form-data" class="card">
+    <form action="{% if is_edit %}/admin/products/edit/{{ product.id }}{% else %}/admin/products/new{% endif %}" method="post" enctype="multipart/form-data" class="card">
         <label for="name">商品名称</label>
         <input type="text" id="name" name="name" value="{{ product.name if product else '' }}" required>
 
