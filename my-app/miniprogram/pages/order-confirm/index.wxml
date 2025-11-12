@@ -21,7 +21,11 @@
         <view class="name">{{item.name}}</view>
         <view class="price-quantity">
           <text class="price">¥{{item.price}}</text>
-          <text class="quantity">x{{item.quantity}}</text>
+          <view class="quantity-control">
+            <view class="btn-quantity" bindtap="onQuantityChange" data-id="{{item.id}}" data-type="DECREMENT">-</view>
+            <view class="quantity">{{item.quantity}}</view>
+            <view class="btn-quantity" bindtap="onQuantityChange" data-id="{{item.id}}" data-type="INCREMENT">+</view>
+          </view>
         </view>
       </view>
     </view>

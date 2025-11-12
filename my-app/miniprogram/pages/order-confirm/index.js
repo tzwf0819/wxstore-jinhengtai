@@ -6,8 +6,8 @@ Page({
   data: {
     orderItems: [],
     totalPrice: 0,
-    shippingAddress: '广东省深圳市南山区', // 模拟地址
-    shippingContact: '13800138000', // 模拟联系方式
+    shippingAddress: '河北省雄安新区易达软件', // 模拟地址
+    shippingContact: '18131218660', // 模拟联系方式
     submitting: false,
   },
 
@@ -20,6 +20,30 @@ Page({
       orderItems,
       totalPrice: totalPrice.toFixed(2)
     });
+  },
+
+  onQuantityChange: function(e) {
+    const { id, type } = e.currentTarget.dataset;
+    const orderItems = this.data.orderItems;
+    const item = orderItems.find(i => i.id === id);
+
+    if (item) {
+      if (type === 'INCREMENT') {
+        item.quantity++;
+      } else if (type === 'DECREMENT' && item.quantity > 1) {
+        item.quantity--;
+      }
+    }
+
+    const totalPrice = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+    this.setData({
+      orderItems,
+      totalPrice: totalPrice.toFixed(2)
+    });
+
+    // Also update the global cart data
+    app.updateCartItem(id, { type, quantity: item.quantity });
   },
 
   onAddressInput: function(e) {

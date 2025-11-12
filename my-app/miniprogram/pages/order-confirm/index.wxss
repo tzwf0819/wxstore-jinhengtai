@@ -82,6 +82,27 @@
   color: #999;
 }
 
+.quantity-control {
+  display: flex;
+  align-items: center;
+}
+
+.btn-quantity {
+  width: 40rpx;
+  height: 40rpx;
+  line-height: 40rpx;
+  text-align: center;
+  border: 1rpx solid #ccc;
+  color: #666;
+  border-radius: 4rpx;
+  margin: 0 10rpx;
+}
+
+.quantity-control .quantity {
+  min-width: 40rpx;
+  text-align: center;
+}
+
 .submit-bar {
   position: fixed;
   bottom: 0;
