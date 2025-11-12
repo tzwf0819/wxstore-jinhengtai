@@ -1,3 +1,5 @@
+import time
+import random
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 from typing import List
@@ -28,8 +30,18 @@ def create_order(
 
         total_amount += product.price * item_in.quantity
 
+    # --- FIX STARTS HERE ---
+    # 1. Generate a unique order_sn
+    order_sn = f"{int(time.time() * 1000)}{random.randint(100, 999)}"
+
+    # 2. Temporarily hardcode user_id (replace with real user logic later)
+    user_id = 1 
+    # --- FIX ENDS HERE ---
+
     # Create the main order
     db_order = models.Order(
+        order_sn=order_sn,  # Added order_sn
+        user_id=user_id,      # Added user_id
         total_amount=total_amount,
         shipping_address=order_in.shipping_address,
         shipping_contact=order_in.shipping_contact,

@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '../config';
+const API_BASE_URL = 'https://www.yidasoftware.xyz/jinhengtai/api/v1/';
 
 export const request = ({ url, method = 'GET', data = {}, headers = {} }) => {
   const baseUrl = API_BASE_URL;
@@ -49,7 +49,7 @@ export const request = ({ url, method = 'GET', data = {}, headers = {} }) => {
                   if (value.startsWith('http')) {
                     acc[key] = value;
                   } else {
-                    acc[key] = `https://www.yidasoftware.xyz${value.startsWith('/') ? '' : '/'}${value}`;
+                    acc[key] = `${API_BASE_URL.split('/api/')[0]}${value.startsWith('/') ? '' : '/'}${value}`;
                   }
                 } else {
                   acc[key] = processImageUrls(value);
