@@ -1,12 +1,12 @@
 from collections.abc import Sequence
 
-from fastapi import APIRouter, Depends, HTTPException, Form
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ...api import deps
 from ...models import Category
-from ...schemas.category import CategoryRead, CategoryUpdate
+from ...schemas.category import CategoryRead, CategoryCreate, CategoryUpdate
 
 router = APIRouter()
 
@@ -20,18 +20,17 @@ def list_categories(db: Session = Depends(deps.get_db)) -> list[CategoryRead]:
     return [CategoryRead.model_validate(category) for category in categories]
 
 
-@router.post("/", response_model=CategoryRead, status_code=201)
+@router.post("/", response_model=CategoryRead, status_code=200)
 def create_category(
-    name: str = Form(...),
+    category_in: CategoryCreate,
     db: Session = Depends(deps.get_db),
 ) -> Category:
-    """Creates a new category from form data."""
-    # Check if category name already exists
-    existing_category = db.execute(select(Category).where(Category.name == name)).first()
+    """Creates a new category from JSON data."""
+    existing_category = db.execute(select(Category).where(Category.name == category_in.name)).first()
     if existing_category:
         raise HTTPException(status_code=400, detail="Category with this name already exists")
 
-    new_category = Category(name=name)
+    new_category = Category(name=category_in.name)
     db.add(new_category)
     db.commit()
     db.refresh(new_category)
@@ -50,21 +49,20 @@ def get_category(category_id: int, db: Session = Depends(deps.get_db)) -> Catego
 @router.put("/{category_id}", response_model=CategoryRead)
 def update_category(
     category_id: int,
-    name: str = Form(...),
+    category_in: CategoryUpdate,
     db: Session = Depends(deps.get_db),
 ) -> Category:
-    """Updates a category's name from form data."""
+    """Updates a category's name from JSON data."""
     category = db.get(Category, category_id)
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
 
-    # Check if the new name is already taken by another category
-    if name != category.name:
-        existing_category = db.execute(select(Category).where(Category.name == name)).first()
+    if category_in.name != category.name:
+        existing_category = db.execute(select(Category).where(Category.name == category_in.name)).first()
         if existing_category:
             raise HTTPException(status_code=400, detail="Category with this name already exists")
     
-    category.name = name
+    category.name = category_in.name
     db.commit()
     db.refresh(category)
     return category

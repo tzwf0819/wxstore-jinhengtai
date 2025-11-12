@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
@@ -8,7 +9,10 @@ from app.api.endpoints import admin as admin_api_router
 app = FastAPI(title="Jinhengtai Mall API", root_path="/jinhengtai")
 
 # --- Static files and Templates ---
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+# Get the absolute path to the directory containing main.py
+current_dir = os.path.dirname(os.path.abspath(__file__))
+static_dir = os.path.join(current_dir, "static")
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # --- API Routes ---
 API_V1_PREFIX = "/api/v1"

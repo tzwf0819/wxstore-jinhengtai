@@ -17,12 +17,12 @@ def create_product(
     product_in: schemas.ProductCreate,
     db: Session = Depends(deps.get_db),
 ):
-    # Create the product instance
+    # Create the product instance using stock_quantity
     db_product = models.Product(
         name=product_in.name,
         description=product_in.description,
         price=product_in.price,
-        stock=product_in.stock,
+        stock_quantity=product_in.stock_quantity, # Corrected field
         category=product_in.category,
         created_at=datetime.utcnow()
     )
@@ -106,31 +106,25 @@ def list_products(
 ) -> list[schemas.ProductRead]:
     offset = (page - 1) * page_size
     
-    # Basic query
     query = select(models.Product)
 
-    # Sorting
     sort_field = getattr(models.Product, sort_by, models.Product.created_at)
     if sort_order.lower() == "desc":
         query = query.order_by(sort_field.desc())
     else:
         query = query.order_by(sort_field.asc())
 
-    # Pagination
     query = query.offset(offset).limit(page_size)
     products: Sequence[models.Product] = db.scalars(query).all()
 
-    # Process products and calculate current stock for each
     product_reads = []
     for p in products:
-        # Calculate current stock by summing up all movements
         current_stock = db.query(func.sum(models.StockMovement.quantity)).filter(
             models.StockMovement.product_id == p.id
         ).scalar() or 0
         
-        # Create a ProductRead object and manually set the current_stock
         product_read = schemas.ProductRead.model_validate(p)
-        product_read.current_stock = current_stock
+        product_read.current_stock = int(current_stock)
         product_reads.append(product_read)
 
     return product_reads
