@@ -5,7 +5,7 @@
 }
 
 .user-profile {
-  background: linear-gradient(to right, #ff9800, #ff5722);
+  background: linear-gradient(to right, #66bb6a, #43a047); /* 浅绿色渐变 */
   color: white;
   padding: 50rpx 30rpx;
   display: flex;

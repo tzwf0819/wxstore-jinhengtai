@@ -19,9 +19,9 @@
 }
 
 .nav-item.active {
-  color: #ff5722;
+  color: #4CAF50; /* 主题色 */
   background-color: #f5f5f5;
-  border-left-color: #ff5722;
+  border-left-color: #4CAF50; /* 主题色 */
   font-weight: bold;
 }
 
@@ -65,7 +65,7 @@
 
 .product-price {
   font-size: 26rpx;
-  color: #ff5722;
+  color: #4CAF50; /* 主题色 */
   margin-top: 10rpx;
 }
 

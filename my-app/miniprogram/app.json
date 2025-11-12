@@ -12,13 +12,13 @@
   ],
   "window": {
     "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#fff",
+    "navigationBarBackgroundColor": "#4CAF50",
     "navigationBarTitleText": "锦亨泰商城",
-    "navigationBarTextStyle": "black"
+    "navigationBarTextStyle": "white"
   },
   "tabBar": {
     "color": "#666",
-    "selectedColor": "#5677fc",
+    "selectedColor": "#4CAF50",
     "backgroundColor": "#fff",
     "borderStyle": "black",
     "list": [

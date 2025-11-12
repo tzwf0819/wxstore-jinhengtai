@@ -89,3 +89,29 @@ def read_order(order_id: int, db: Session = Depends(get_db)):
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     return order
+
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    return order
+
+@router.post("/{order_id}/delete", status_code=204)
+def delete_order_via_post(order_id: int, db: Session = Depends(get_db)):
+    order = db.query(models.Order).options(joinedload(models.Order.items)).filter(models.Order.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    # Restore stock for each item in the order
+    for item in order.items:
+        # Create a stock movement record for the refund
+        refund_movement = StockMovement(
+            product_id=item.product_id,
+            quantity=item.quantity,  # Positive quantity to restore stock
+            movement_type=StockMovementType.REFUND.value,
+            reference_id=f"order_{order.id}"
+        )
+        db.add(refund_movement)
+
+    # Delete the order and its items (cascade delete should be configured in the model)
+    db.delete(order)
+    db.commit()
+    return

@@ -112,14 +112,14 @@ def list_products(
     page_size: int = Query(200, ge=1, le=200, description="Page size"),
     sort_by: str = Query("created_at", description="Sort by field"),
     sort_order: str = Query("desc", description="Sort order (asc/desc)"),
-    category_id: int = Query(None, description="Filter by category ID"),
+    category: str = Query(None, description="Filter by category name"),
 ) -> list[schemas.ProductRead]:
     offset = (page - 1) * page_size
     
     query = select(models.Product)
 
-    if category_id is not None:
-        query = query.where(models.Product.category_id == category_id)
+    if category is not None:
+        query = query.where(models.Product.category == category)
 
     sort_field = getattr(models.Product, sort_by, models.Product.created_at)
     if sort_order.lower() == "desc":

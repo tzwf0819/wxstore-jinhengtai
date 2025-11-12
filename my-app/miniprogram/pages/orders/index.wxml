@@ -1,7 +1,29 @@
-'''<!--pages/orders/index.wxml-->
 <view class="container">
-  <view class="empty-tip">
+  <block wx:if="{{orders.length > 0}}">
+    <view class="order-card" wx:for="{{orders}}" wx:key="id">
+      <view class="card-header">
+        <text>订单号: {{item.id}}</text>
+        <text class="status">{{item.status}}</text>
+      </view>
+      <view class="product-list">
+        <view class="product-item" wx:for="{{item.items}}" wx:for-item="product" wx:key="product.id">
+          <image class="product-image" src="{{product.product.image_url || '../../static/images/product_placeholder.png'}}" />
+          <view class="product-info">
+            <view class="product-name">{{product.product.name}}</view>
+            <view class="price-quantity">
+              <text>¥{{product.product.price}}</text>
+              <text>x{{product.quantity}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="card-footer">
+        <view class="total-amount">合计: ¥{{item.total_amount}}</view>
+        <button class="btn refund-btn" bindtap="onRefund" data-id="{{item.id}}">退款</button>
+      </view>
+    </view>
+  </block>
+  <view wx:else class="empty-tip">
     暂无订单记录
   </view>
 </view>
-''

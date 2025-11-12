@@ -123,13 +123,13 @@
 }
 
 .total-price {
-  color: #ff5722;
+  color: #4CAF50; /* 主题色 */
   font-size: 32rpx;
   font-weight: bold;
 }
 
 .submit-btn {
-  background: linear-gradient(to right, #ff9800, #ff5722);
+  background: #4CAF50; /* 主题色 */
   color: white;
   border-radius: 40rpx;
   padding: 0 50rpx;
