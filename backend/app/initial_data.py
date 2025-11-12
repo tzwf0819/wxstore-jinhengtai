@@ -39,8 +39,8 @@ def init_db():
 
         # Create Banners
         banners_data = [
-            Banner(image_url="https://via.placeholder.com/750x300.png/0000FF/FFFFFF?Text=Banner1", link_url="/pages/product/detail/detail?id=1", sort_order=1),
-            Banner(image_url="https://via.placeholder.com/750x300.png/FF0000/FFFFFF?Text=Banner2", link_url="/pages/product/detail/detail?id=2", sort_order=2),
+            Banner(image_url="/static/images/banner1.png", link_url="/pages/product/detail/detail?id=1", sort_order=1),
+            Banner(image_url="/static/images/banner2.png", link_url="/pages/product/detail/detail?id=2", sort_order=2),
         ]
         db.add_all(banners_data)
         db.commit()
