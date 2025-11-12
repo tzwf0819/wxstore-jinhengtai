@@ -17,7 +17,7 @@ async def admin_home(request: Request):
 
 @router.get("/admin/products", response_class=HTMLResponse)
 async def list_products_web(request: Request, db: Session = Depends(deps.get_db)):
-    products_data = api_products.list_products(
+    products_data = api_products.get_all_products(
         db=db,
         page=1,
         page_size=200,
