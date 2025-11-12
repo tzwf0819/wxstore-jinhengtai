@@ -33,7 +33,10 @@ async def list_products_web(request: Request, db: Session = Depends(deps.get_db)
 @router.get("/admin/products/edit/{product_id}", response_class=HTMLResponse)
 async def edit_product_form(request: Request, product_id: int, db: Session = Depends(deps.get_db)):
     product = db.query(models.Product).filter(models.Product.id == product_id).first()
-    return templates.TemplateResponse("product_form.html", {"request": request, "product": product, "is_edit": True})
+    return templates.TemplateResponse(
+        "product_form.html", 
+        {"request": request, "product": product, "is_edit": True, "ROOT_PATH": os.getenv("ROOT_PATH", "")}
+    )
 
 @router.get("/admin/products/new", response_class=HTMLResponse)
 async def new_product_form(request: Request):
