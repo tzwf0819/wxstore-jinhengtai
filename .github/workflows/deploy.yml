@@ -91,14 +91,12 @@ jobs:
           sudo tar -xzf "/tmp/backend-deploy.tar.gz" -C "${BACKEND_DIR}"
           sudo rm "/tmp/backend-deploy.tar.gz"
 
-          if [ ! -d "${VENV_DIR}" ]; then
-              echo "Creating Python virtual environment..."
-              sudo python3 -m venv "${VENV_DIR}"
-          fi
-
-          echo "Forcing pip to use official PyPI..."
-          echo -e "[global]
-          index-url = https://pypi.org/simple" | sudo tee "${VENV_DIR}/pip.conf" > /dev/null
+          # The server's default python3 is 3.6, which is too old for fastapi==0.115.0.
+          # We will use python3.8, assuming it's available on the server.
+          # We also remove the old venv directory to ensure a clean environment.
+          echo "Recreating Python virtual environment with a modern Python version..."
+          sudo rm -rf "${VENV_DIR}"
+          sudo python3.8 -m venv "${VENV_DIR}"
 
           echo "Installing Python dependencies..."
           sudo "${VENV_DIR}/bin/pip" install --upgrade pip
