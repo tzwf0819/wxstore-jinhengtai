@@ -33,7 +33,35 @@ export const request = ({ url, method = 'GET', data = {}, headers = {} }) => {
       header: requestHeaders,
       success: (res) => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
-          resolve(res.data);
+          // 处理图片URL，添加完整域名
+          const processImageUrls = (data) => {
+            if (!data) return data;
+            
+            if (Array.isArray(data)) {
+              return data.map(item => processImageUrls(item));
+            }
+            
+            if (typeof data === 'object') {
+              return Object.keys(data).reduce((acc, key) => {
+                const value = data[key];
+                if (key.match(/(image|img|avatar|banner|photo)/i) && typeof value === 'string') {
+                  // 如果已经是完整URL则跳过
+                  if (value.startsWith('http')) {
+                    acc[key] = value;
+                  } else {
+                    acc[key] = `https://www.yidasoftware.xyz${value.startsWith('/') ? '' : '/'}${value}`;
+                  }
+                } else {
+                  acc[key] = processImageUrls(value);
+                }
+                return acc;
+              }, {});
+            }
+            
+            return data;
+          };
+          
+          resolve(processImageUrls(res.data));
         } else {
           console.error('Request failed:', res);
           const errorMessage = res.data?.detail || res.data?.message || '请求失败';

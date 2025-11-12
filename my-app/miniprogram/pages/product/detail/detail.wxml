@@ -1,9 +1,19 @@
-'''<view class="container">
+<view class="container">
   <view wx:if="{{loading}}" class="loading-tip">加载中...</view>
+
   <block wx:if="{{!loading && product}}">
-    <image wx:if="{{product.image_url}}" class="product-image" src="{{product.image_url}}" mode="widthFix"></image>
-    <image wx:else class="product-image" src="/static/images/product_placeholder.png" mode="widthFix"></image>
+    <!-- Product Image Swiper -->
+    <swiper class="product-swiper" autoplay circular indicator-dots>
+      <swiper-item>
+        <image 
+          class="product-image" 
+          src="{{product.image_url || '/static/images/product_placeholder.png'}}" 
+          mode="aspectFill"
+        />
+      </swiper-item>
+    </swiper>
     
+    <!-- Product Information Section -->
     <view class="product-info">
       <view class="price-bar">
         <text class="price">¥{{product.price}}</text>
@@ -12,16 +22,18 @@
       <view class="name">{{product.name}}</view>
     </view>
 
+    <!-- Product Details Section -->
     <view class="detail-section">
       <view class="section-title">商品详情</view>
       <view class="description">{{product.description || '暂无详细描述'}}</view>
     </view>
   </block>
+
   <view wx:if="{{!loading && !product}}" class="empty-tip">
     商品信息不存在
   </view>
 
-  <!-- 底部操作栏 -->
+  <!-- Bottom Action Bar -->
   <view class="bottom-bar">
     <view class="btn-group">
       <button class="bar-btn cart-btn" bindtap="goToCart">
@@ -35,4 +47,3 @@
     </view>
   </view>
 </view>
-''

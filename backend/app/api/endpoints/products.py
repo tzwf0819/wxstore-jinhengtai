@@ -51,7 +51,16 @@ def read_product(
     product = db.get(models.Product, product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-    return schemas.ProductRead.model_validate(product)
+
+    # Calculate current stock from stock movements
+    current_stock = db.query(func.sum(models.StockMovement.quantity)).filter(
+        models.StockMovement.product_id == product.id
+    ).scalar() or 0
+
+    product_read = schemas.ProductRead.model_validate(product)
+    product_read.current_stock = int(current_stock)
+
+    return product_read
 
 
 @router.put("/{product_id}", response_model=schemas.ProductRead)

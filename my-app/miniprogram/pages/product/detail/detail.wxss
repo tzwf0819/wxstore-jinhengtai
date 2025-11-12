@@ -3,16 +3,22 @@
   background-color: #f5f5f5;
 }
 
-.product-image {
+.product-swiper {
   width: 100%;
   height: 750rpx;
-  background-color: #fff;
+}
+
+.product-image {
+  width: 100%;
+  height: 100%;
 }
 
 .product-info {
   background-color: #fff;
-  padding: 20rpx;
-  margin-top: -10rpx; /* 轻微上移，覆盖图片底部 */
+  padding: 30rpx 20rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .price-bar {
@@ -37,12 +43,15 @@
   font-size: 34rpx;
   font-weight: bold;
   color: #333;
+  line-height: 1.4;
 }
 
 .detail-section {
   background-color: #fff;
   margin-top: 20rpx;
   padding: 20rpx;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .section-title {
@@ -65,17 +74,19 @@
   padding: 100rpx 0;
 }
 
-/* 底部操作栏 */
+/* Bottom Action Bar */
 .bottom-bar {
+  box-sizing: border-box; /* Ensures padding and border are included in the width */
   position: fixed;
   bottom: 0;
   left: 0;
-  right: 0;
+  width: 100%; /* Use width: 100% instead of left/right 0 */
   height: 100rpx;
   background-color: #fff;
   display: flex;
   align-items: center;
   border-top: 1rpx solid #eee;
+  z-index: 100; /* Ensure it's on top */
 }
 
 .btn-group {
@@ -109,6 +120,7 @@
   flex: 1;
   display: flex;
   height: 100%;
+  min-width: 0; /* Prevents the group from overflowing its container */
 }
 
 .action-btn {
@@ -116,10 +128,11 @@
   border: none;
   border-radius: 0;
   color: #fff;
-  font-size: 28rpx;
+  font-size: 26rpx; /* Adjusted font size */
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0 5rpx; /* Add some padding */
 }
 .action-btn::after {
   border: none;
