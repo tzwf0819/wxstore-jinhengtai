@@ -37,67 +37,30 @@ jobs:
 
             # 3. 清理旧文件，但保留备份
             echo "Cleaning up old files..."
-            # 删除所有文件和隐藏文件，除了 .env.bak
             sudo find . -mindepth 1 ! -name '.env.bak' -exec rm -rf {} +
 
-            # 4. 下载最新的代码 (SSH Git Clone 方法)
-            echo "--- Cloning source code via SSH ---"
+            # 4. 下载最新的代码 (Public Repo)
+            echo "--- Cloning public repository ---"
 
-            # 确保服务器上安装了 git 和 openssh-clients
-            echo "Ensuring git and ssh client are installed..."
+            # 确保服务器上安装了 git
+            echo "Ensuring git is installed..."
             if command -v yum &> /dev/null; then
-                sudo yum install -y git openssh-clients || echo "Yum command failed. Assuming tools are present."
+                sudo yum install -y git || echo "Yum command failed. Assuming git is present."
             elif command -v apt-get &> /dev/null; then
-                sudo apt-get update -y > /dev/null
-                sudo apt-get install -y git openssh-clients || echo "Apt command failed. Assuming tools are present."
+                sudo apt-get update -y > /dev/null && sudo apt-get install -y git || echo "Apt command failed. Assuming git is present."
             else
-                echo "Warning: Could not find a package manager. Assuming tools are present."
+                echo "Warning: No package manager found. Assuming git is present."
             fi
 
-            # 设置 SSH 环境，使用我们配置的部署私钥
-            echo "Setting up SSH environment for git..."
-            # 创建一个临时的 SSH 密钥文件
-            SSH_KEY_PATH=$(mktemp)
-            # 将密钥从 GitHub Secret 写入该文件
-            echo "${{ secrets.DEPLOY_SSH_KEY }}" > "$SSH_KEY_PATH"
-            chmod 600 "$SSH_KEY_PATH"
-
-            # 使用 ssh-agent 和 ssh-add 来安全地管理密钥
-            # eval `ssh-agent -s`
-            # ssh-add "$SSH_KEY_PATH"
-
-            # 创建一个 موقت SSH 包装脚本
-            SSH_WRAPPER_PATH=$(mktemp)
-            cat > "$SSH_WRAPPER_PATH" <<EOF
-              #!/bin/sh
-              ssh -i "$SSH_KEY_PATH" -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "\$@"
-              EOF
-            chmod +x "$SSH_WRAPPER_PATH"
-
-            # 克隆代码，通过 GIT_SSH_COMMAND 使用我们的包装脚本
-            echo "Cloning repository using SSH..."
+            # 直接通过 HTTPS 克隆公开仓库
+            echo "Cloning repository via HTTPS..."
             TEMP_CLONE_DIR=$(mktemp -d)
-            sudo env GIT_SSH_COMMAND="$SSH_WRAPPER_PATH" git clone --depth 1 git@github.com:${{ github.repository }}.git "$TEMP_CLONE_DIR"
-
-            # 清理 SSH 相关文件
-            echo "Cleaning up SSH credentials..."
-            rm -f "$SSH_KEY_PATH" "$SSH_WRAPPER_PATH"
-            # ssh-agent -k
+            git clone --depth 1 https://github.com/${{ github.repository }}.git "$TEMP_CLONE_DIR"
 
             # 将克隆下来的所有文件移动到项目目录
             echo "Moving files into project directory..."
             sudo mv "$TEMP_CLONE_DIR"/* .
             sudo mv "$TEMP_CLONE_DIR"/.* . 2>/dev/null || true
-            sudo rm -rf "$TEMP_CLONE_DIR"
-
-
-            # 将克隆下来的所有文件（包括隐藏文件）移动到当前项目目录
-            echo "Moving files into project directory..."
-            sudo mv "$TEMP_CLONE_DIR"/* .
-            sudo mv "$TEMP_CLONE_DIR"/.* . 2>/dev/null || true
-
-            # 清理临时目录
-            echo "Cleaning up..."
             sudo rm -rf "$TEMP_CLONE_DIR"
 
             # 5. 恢复 .env 文件
@@ -110,4 +73,3 @@ jobs:
             echo "Running the deployment script on the server..."
             sudo chmod +x ./deploy_jinhengtai.sh
             sudo ./deploy_jinhengtai.sh
-
