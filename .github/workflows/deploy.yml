@@ -44,6 +44,10 @@ jobs:
         echo "SQL_SERVER_PASSWORD='${{ secrets.JINHENGTAI_DB_PASSWORD }}'" >> .env
         echo "SQL_SERVER_DATABASE=${{ secrets.JINHENGTAI_DB_NAME }}" >> .env
 
+    - name: Install test dependencies
+      working-directory: backend
+      run: pip install -r requirements-dev.txt
+
     - name: Run tests
       working-directory: backend
       run: pytest

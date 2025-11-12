@@ -14,8 +14,8 @@
         <div><strong>用户 ID:</strong> {{ order.user_id }}</div>
         <div><strong>总价:</strong> ¥{{ "%.2f"|format(order.total_amount) }}</div>
         <div><strong>状态:</strong> {{ order.status }}</div>
-        <div><strong>创建时间:</strong> {{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
-        <div><strong>更新时间:</strong> {{ order.updated_at.strftime('%Y-%m-%d %H:%M') }}</div>
+        <div><strong>创建时间:</strong> {{ order.create_time.strftime('%Y-%m-%d %H:%M') }}</div>
+        <div><strong>更新时间:</strong> {{ order.update_time.strftime('%Y-%m-%d %H:%M') }}</div>
     </div>
     <h3 style="margin-top: 2rem;">订单商品</h3>
     <table role="grid">

@@ -154,7 +154,7 @@ async def delete_banner_web(banner_id: int, db: Session = Depends(deps.get_db)):
 
 @router.get("/admin/categories", response_class=HTMLResponse)
 async def list_categories_web(request: Request, db: Session = Depends(deps.get_db)):
-    categories_data = api_categories.read_categories(db=db)
+    categories_data = api_categories.list_categories(db=db)
     return templates.TemplateResponse("category_list.html", {"request": request, "categories": categories_data})
 
 @router.get("/admin/categories/new", response_class=HTMLResponse)
@@ -214,7 +214,7 @@ async def view_order_web(request: Request, order_id: int, db: Session = Depends(
 
 @router.get("/admin/stock", response_class=HTMLResponse)
 async def list_stock_movements_web(request: Request, db: Session = Depends(deps.get_db)):
-    stock_movements = api_stock.read_stock_movements(db=db, skip=0, limit=200) # Fetch latest 200 movements
+    stock_movements = api_stock.list_stock_movements(db=db, skip=0, limit=200) # Fetch latest 200 movements
     return templates.TemplateResponse("stock_list.html", {"request": request, "movements": stock_movements})
 
 
