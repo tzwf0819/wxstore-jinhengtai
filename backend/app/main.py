@@ -6,7 +6,18 @@ from app.api import api_router
 from app.web.admin import router as admin_web_router
 from app.api.endpoints import admin as admin_api_router
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI(title="Jinhengtai Mall API")
+
+# --- CORS Middleware ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 # --- Static files and Templates ---
 # Get the absolute path to the directory containing main.py
