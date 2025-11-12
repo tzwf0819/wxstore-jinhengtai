@@ -1,3 +1,4 @@
+
 from collections.abc import Sequence
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -25,6 +26,7 @@ def create_category(
     category_in: CategoryCreate,
     db: Session = Depends(deps.get_db),
 ) -> Category:
+    print(f"--- In api.create_category, received: {category_in!r} ---") # DEBUG
     """Creates a new category from JSON data."""
     existing_category = db.execute(select(Category).where(Category.name == category_in.name)).first()
     if existing_category:

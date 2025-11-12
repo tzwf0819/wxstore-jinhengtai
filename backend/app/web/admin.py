@@ -1,3 +1,4 @@
+
 import os
 import shutil
 import uuid
@@ -8,9 +9,15 @@ from sqlalchemy.orm import Session
 import pathlib
 
 from .. import models
-from ..schemas import banner as banner_schemas
 from ..api import deps
 from ..api.endpoints import products as api_products, banners as api_banners, categories as api_categories, orders as api_orders, stock as api_stock
+
+# --- Direct Schema Imports for Clarity ---
+from ..schemas.product import ProductCreate, ProductUpdate
+from ..schemas.banner import BannerCreate, BannerUpdate
+from ..schemas.category import CategoryCreate, CategoryUpdate
+from ..schemas.stock import StockMovementCreate
+
 
 router = APIRouter()
 
@@ -24,6 +31,7 @@ UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 async def admin_home(request: Request):
     return RedirectResponse(url=request.url_for('list_products_web'))
 
+# --- Product Routes ---
 @router.get("/admin/products", response_class=HTMLResponse)
 async def list_products_web(request: Request, db: Session = Depends(deps.get_db)):
     products_data = api_products.get_all_products(
@@ -58,7 +66,7 @@ async def create_product_web(
             shutil.copyfileobj(image.file, buffer)
         image_url = f"/static/uploads/{unique_filename}"
 
-    product_in = schemas.ProductCreate(
+    product_in = ProductCreate(
         name=name, description=description, price=price, category=category, 
         image_url=image_url, stock_quantity=0
     )
@@ -88,15 +96,14 @@ async def update_product_web(
             shutil.copyfileobj(image.file, buffer)
         image_url = f"/static/uploads/{unique_filename}"
 
-    product_in = schemas.ProductUpdate(
+    product_in = ProductUpdate(
         name=name, description=description, price=price, category=category, 
         image_url=image_url
     )
     api_products.update_product(product_id=product_id, product_in=product_in, db=db)
     return RedirectResponse(url=request.url_for('list_products_web'), status_code=303)
 
-# --- Banner Management Routes ---
-
+# --- Banner Routes ---
 @router.get("/admin/banners", response_class=HTMLResponse)
 async def list_banners_web(request: Request, db: Session = Depends(deps.get_db)):
     banners_data = api_banners.read_banners(db=db)
@@ -123,7 +130,7 @@ async def create_banner_web(
             shutil.copyfileobj(image.file, buffer)
         image_url = f"/static/uploads/{unique_filename}"
 
-    banner_in = banner_schemas.BannerCreate(
+    banner_in = BannerCreate(
         image_url=image_url,
         link_url=link_url,
         sort_order=sort_order,
@@ -145,7 +152,7 @@ async def update_banner_web(
     banner_id: int,
     link_url: str = Form(None),
     sort_order: int = Form(1),
-    is_active: str = Form(None), # Receive as string to handle checkbox
+    is_active: str = Form(None),
     image: UploadFile = File(None),
     db: Session = Depends(deps.get_db)
 ):
@@ -161,10 +168,9 @@ async def update_banner_web(
             shutil.copyfileobj(image.file, buffer)
         image_url = f"/static/uploads/{unique_filename}"
 
-    # Convert is_active from form value ('true' or None) to boolean
     is_active_bool = is_active == 'true'
 
-    banner_in = banner_schemas.BannerUpdate(
+    banner_in = BannerUpdate(
         image_url=image_url,
         link_url=link_url,
         sort_order=sort_order,
@@ -173,15 +179,12 @@ async def update_banner_web(
     api_banners.update_banner(db=db, banner_id=banner_id, banner_in=banner_in)
     return RedirectResponse(url=request.url_for('list_banners_web'), status_code=303)
 
-
 @router.post("/admin/banners/delete/{banner_id}")
 async def delete_banner_web(request: Request, banner_id: int, db: Session = Depends(deps.get_db)):
     api_banners.delete_banner(db=db, banner_id=banner_id)
     return RedirectResponse(url=request.url_for('list_banners_web'), status_code=303)
 
-
-# --- Category Management Routes ---
-
+# --- Category Routes ---
 @router.get("/admin/categories", response_class=HTMLResponse)
 async def list_categories_web(request: Request, db: Session = Depends(deps.get_db)):
     categories_data = api_categories.list_categories(db=db)
@@ -197,7 +200,8 @@ async def create_category_web(
     name: str = Form(...),
     db: Session = Depends(deps.get_db)
 ):
-    category_in = schemas.CategoryCreate(name=name)
+    print(f"--- In create_category_web, received name: {name} ---") # DEBUG
+    category_in = CategoryCreate(name=name)
     api_categories.create_category(db=db, category_in=category_in)
     return RedirectResponse(url=request.url_for('list_categories_web'), status_code=303)
 
@@ -215,7 +219,7 @@ async def update_category_web(
     name: str = Form(...),
     db: Session = Depends(deps.get_db)
 ):
-    category_in = schemas.CategoryUpdate(name=name)
+    category_in = CategoryUpdate(name=name)
     updated_category = api_categories.update_category(db=db, category_id=category_id, category_in=category_in)
     if not updated_category:
         return HTMLResponse(status_code=404, content="Category not found")
@@ -226,12 +230,10 @@ async def delete_category_web(request: Request, category_id: int, db: Session = 
     api_categories.delete_category(db=db, category_id=category_id)
     return RedirectResponse(url=request.url_for('list_categories_web'), status_code=303)
 
-
-# --- Order Management Routes (Read-Only) ---
-
+# --- Order Routes (Read-Only) ---
 @router.get("/admin/orders", response_class=HTMLResponse)
 async def list_orders_web(request: Request, db: Session = Depends(deps.get_db)):
-    orders_data = api_orders.read_orders(db=db, skip=0, limit=100) # Fetch latest 100 orders
+    orders_data = api_orders.read_orders(db=db, skip=0, limit=100)
     return templates.TemplateResponse("order_list.html", {"request": request, "orders": orders_data})
 
 @router.get("/admin/orders/{order_id}", response_class=HTMLResponse)
@@ -241,10 +243,44 @@ async def view_order_web(request: Request, order_id: int, db: Session = Depends(
         return HTMLResponse(status_code=404, content="Order not found")
     return templates.TemplateResponse("order_detail.html", {"request": request, "order": order})
 
-
-# --- Stock Management Routes (Read-Only) ---
-
+# --- Stock Routes (Read-Only) ---
 @router.get("/admin/stock", response_class=HTMLResponse)
 async def list_stock_movements_web(request: Request, db: Session = Depends(deps.get_db)):
-    stock_movements = api_stock.list_stock_movements(db=db, skip=0, limit=200) # Fetch latest 200 movements
+    stock_movements = api_stock.list_stock_movements(db=db, skip=0, limit=200)
     return templates.TemplateResponse("stock_list.html", {"request": request, "movements": stock_movements})
+
+# --- Routes for Adding Stock --
+@router.get("/admin/stock/new", response_class=HTMLResponse)
+async def new_stock_in_form(request: Request, db: Session = Depends(deps.get_db)):
+    products = db.query(models.Product).order_by(models.Product.name).all()
+    return templates.TemplateResponse("stock_form.html", {"request": request, "products": products})
+
+@router.post("/admin/stock/new", response_class=RedirectResponse)
+async def create_stock_in_web(
+    request: Request,
+    product_id: int = Form(...),
+    quantity: int = Form(...),
+    reference_id: str = Form(""),
+    db: Session = Depends(deps.get_db)
+):
+    movement_in = StockMovementCreate(
+        product_id=product_id,
+        quantity=quantity,
+        reference_id=reference_id or "Manual Stock In"
+    )
+    api_stock.stock_in(movement=movement_in, db=db)
+    return RedirectResponse(url=request.url_for('list_stock_movements_web'), status_code=303)
+
+@router.post("/admin/stock/void/{movement_id}", response_class=RedirectResponse)
+async def void_stock_movement_web(
+    request: Request,
+    movement_id: int,
+    db: Session = Depends(deps.get_db)
+):
+    try:
+        api_stock.void_stock_movement(movement_id=movement_id, db=db)
+    except HTTPException as e:
+        # You could add a message to the user here, e.g., using session flash messages
+        print(f"Failed to void stock movement: {e.detail}") # Or use a proper logger
+        pass
+    return RedirectResponse(url=request.url_for('list_stock_movements_web'), status_code=303)

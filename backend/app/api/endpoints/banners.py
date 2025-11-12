@@ -2,9 +2,9 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.api import deps
-from app.models.banner import Banner
-from app.schemas.banner import BannerCreate, BannerRead, BannerUpdate
+from ...api import deps
+from ...models.banner import Banner
+from ...schemas.banner import BannerCreate, BannerRead, BannerUpdate
 
 router = APIRouter()
 

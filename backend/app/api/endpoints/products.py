@@ -1,3 +1,4 @@
+
 from collections.abc import Sequence
 from datetime import datetime
 
@@ -5,8 +6,10 @@ from fastapi import APIRouter, Depends, Query, HTTPException, Request
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
-from ... import models, schemas
+from ... import models
 from ...api import deps
+from ...schemas.product import ProductCreate, ProductRead, ProductUpdate
+from ...schemas.stock import StockMovementCreate
 from ...models.stock import StockMovement, StockMovementType
 
 router = APIRouter()
@@ -17,14 +20,14 @@ def get_all_products(
     page_size: int,
     sort_by: str,
     sort_order: str,
-    category: str | None,  # Changed from category_id to category
-) -> list[schemas.ProductRead]:
+    category: str | None,
+) -> list[ProductRead]:
     offset = (page - 1) * page_size
     
     query = select(models.Product)
 
     if category is not None:
-        query = query.where(models.Product.category == category) # Filter by name
+        query = query.where(models.Product.category == category)
 
     sort_field = getattr(models.Product, sort_by, models.Product.created_at)
     if sort_order.lower() == "desc":
@@ -41,13 +44,13 @@ def get_all_products(
             models.StockMovement.product_id == p.id
         ).scalar() or 0
         
-        product_read = schemas.ProductRead.model_validate(p)
+        product_read = ProductRead.model_validate(p)
         product_read.current_stock = int(current_stock)
         product_reads.append(product_read)
 
     return product_reads
 
-@router.get("/", response_model=list[schemas.ProductRead])
+@router.get("/", response_model=list[ProductRead])
 def list_products(
     db: Session = Depends(deps.get_db),
     page: int = Query(1, ge=1, description="Page number"),
@@ -55,12 +58,12 @@ def list_products(
     sort_by: str = Query("created_at", description="Sort by field"),
     sort_order: str = Query("desc", description="Sort order (asc/desc)"),
     category: str = Query(None, description="Filter by category name"),
-) -> list[schemas.ProductRead]:
+) -> list[ProductRead]:
     return get_all_products(db, page, page_size, sort_by, sort_order, category)
 
-@router.post("/", response_model=schemas.ProductRead)
+@router.post("/", response_model=ProductRead)
 def create_product(
-    product_in: schemas.ProductCreate,
+    product_in: ProductCreate,
     db: Session = Depends(deps.get_db),
 ):
     db_product = models.Product(
@@ -84,11 +87,9 @@ def create_product(
     db.add(initial_movement)
     db.commit()
 
-    return schemas.ProductRead.model_validate(db_product)
+    return ProductRead.model_validate(db_product)
 
-# ... (The rest of the endpoints will be updated in the next steps)
-
-@router.get("/{product_id}", response_model=schemas.ProductRead)
+@router.get("/{product_id}", response_model=ProductRead)
 def read_product(
     product_id: int,
     db: Session = Depends(deps.get_db),
@@ -101,15 +102,15 @@ def read_product(
         models.StockMovement.product_id == product.id
     ).scalar() or 0
 
-    product_read = schemas.ProductRead.model_validate(product)
+    product_read = ProductRead.model_validate(product)
     product_read.current_stock = int(current_stock)
 
     return product_read
 
-@router.put("/{product_id}", response_model=schemas.ProductRead)
+@router.put("/{product_id}", response_model=ProductRead)
 def update_product(
     product_id: int,
-    product_in: schemas.ProductUpdate,
+    product_in: ProductUpdate,
     db: Session = Depends(deps.get_db),
 ):
     db_product = db.get(models.Product, product_id)
@@ -127,7 +128,7 @@ def update_product(
     db.add(db_product)
     db.commit()
     db.refresh(db_product)
-    return schemas.ProductRead.model_validate(db_product)
+    return ProductRead.model_validate(db_product)
 
 @router.delete("/{product_id}", status_code=204)
 def delete_product(
@@ -143,4 +144,3 @@ def delete_product(
     db.delete(db_product)
     db.commit()
     return
-

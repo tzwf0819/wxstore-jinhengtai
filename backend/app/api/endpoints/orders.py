@@ -1,19 +1,21 @@
+
 import time
 import random
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 from typing import List
 
-from app import models, schemas
-from app.core.database import get_db
+from ... import models
+from ...core.database import get_db
+from ...schemas.order import OrderCreate, OrderRead
+from ...schemas.stock import StockMovementCreate
+from ...models.stock import StockMovementType
 
 router = APIRouter()
 
-from app.models.stock import StockMovement, StockMovementType
-
-@router.post("/", response_model=schemas.OrderRead)
+@router.post("/", response_model=OrderRead)
 def create_order(
-    order_in: schemas.OrderCreate,
+    order_in: OrderCreate,
     db: Session = Depends(get_db),
 ):
     total_amount = 0
@@ -22,60 +24,48 @@ def create_order(
     # First, validate all products and calculate total amount
     for item_in in order_in.items:
         product = db.get(models.Product, item_in.product_id)
-        # --- FIX: Explicitly check if product exists ---
         if not product:
             raise HTTPException(
                 status_code=404, 
                 detail=f"Product with id {item_in.product_id} not found"
             )
-        # --- FIX: Check for sufficient stock ---
         if product.stock_quantity < item_in.quantity:
             raise HTTPException(
                 status_code=400, 
                 detail=f"Not enough stock for product {product.name}. Available: {product.stock_quantity}, Requested: {item_in.quantity}"
             )
-
         total_amount += product.price * item_in.quantity
 
-    # --- FIX STARTS HERE ---
-    # 1. Generate a unique order_sn
     order_sn = f"{int(time.time() * 1000)}{random.randint(100, 999)}"
+    user_id = 1 # Replace with real user logic later
 
-    # 2. Temporarily hardcode user_id (replace with real user logic later)
-    user_id = 1 
-    # --- FIX ENDS HERE ---
-
-    # Create the main order
     db_order = models.Order(
-        order_sn=order_sn,  # Added order_sn
-        user_id=user_id,      # Added user_id
+        order_sn=order_sn,  
+        user_id=user_id,      
         total_amount=total_amount,
         shipping_address=order_in.shipping_address,
         shipping_contact=order_in.shipping_contact,
         status="PENDING",
     )
     db.add(db_order)
-    db.flush() # Use flush to get the order ID before committing
+    db.flush()
 
-    # Create order items and update stock
     for item_in in order_in.items:
         product = db.get(models.Product, item_in.product_id)
-        # This direct manipulation is now handled by stock movements
-        product.stock_quantity -= item_in.quantity # FIX: Re-enable direct stock deduction
+        product.stock_quantity -= item_in.quantity
         product.sales += item_in.quantity
         
         order_item = models.OrderItem(
             order_id=db_order.id,
             product_id=product.id,
             quantity=item_in.quantity,
-            price=product.price  # FIX: Added the missing price
+            price=product.price
         )
         order_items_to_create.append(order_item)
 
-        # Create a stock movement record for the sale
-        sale_movement = StockMovement(
+        sale_movement = models.StockMovement(
             product_id=product.id,
-            quantity=-item_in.quantity, # Sale is a reduction, so it's negative
+            quantity=-item_in.quantity, 
             movement_type=StockMovementType.SALE.value,
             reference_id=f"order_{db_order.id}"
         )
@@ -86,7 +76,7 @@ def create_order(
     db.refresh(db_order)
     return db_order
 
-@router.get("/", response_model=List[schemas.OrderRead])
+@router.get("/", response_model=List[OrderRead])
 def read_orders(db: Session = Depends(get_db), skip: int = 0, limit: int = 100):
     orders = (
         db.query(models.Order)
@@ -98,7 +88,7 @@ def read_orders(db: Session = Depends(get_db), skip: int = 0, limit: int = 100):
     )
     return orders
 
-@router.get("/{order_id}", response_model=schemas.OrderRead)
+@router.get("/{order_id}", response_model=OrderRead)
 def read_order(order_id: int, db: Session = Depends(get_db)):
     order = (
         db.query(models.Order)
@@ -110,28 +100,29 @@ def read_order(order_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Order not found")
     return order
 
-    if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
-    return order
-
 @router.post("/{order_id}/delete", status_code=204)
 def delete_order_via_post(order_id: int, db: Session = Depends(get_db)):
     order = db.query(models.Order).options(joinedload(models.Order.items)).filter(models.Order.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
 
-    # Restore stock for each item in the order
     for item in order.items:
+        # Restore stock and decrease sales for the refunded product
+        product = db.get(models.Product, item.product_id)
+        if product:
+            product.stock_quantity += item.quantity
+            product.sales -= item.quantity
+            db.add(product)
+
         # Create a stock movement record for the refund
-        refund_movement = StockMovement(
+        refund_movement = models.StockMovement(
             product_id=item.product_id,
-            quantity=item.quantity,  # Positive quantity to restore stock
+            quantity=item.quantity,  # Positive quantity for refund
             movement_type=StockMovementType.REFUND.value,
             reference_id=f"order_{order.id}"
         )
         db.add(refund_movement)
 
-    # Delete the order and its items (cascade delete should be configured in the model)
     db.delete(order)
     db.commit()
     return

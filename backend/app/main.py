@@ -3,9 +3,9 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import api_router
-from app.web.admin import router as admin_web_router
-from app.api.endpoints import admin as admin_api_router
+from fastapi import APIRouter
+from app.web.admin import router as web_router
+from app.api.endpoints import banners, categories, orders, products, stock, admin as admin_api_router
 
 # Create the FastAPI app instance
 app = FastAPI(title="Jinhengtai Mall API", root_path="/jinhengtai")
@@ -26,11 +26,22 @@ os.makedirs(os.path.join(static_dir, "uploads"), exist_ok=True)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # --- API Routes ---
-app.include_router(api_router, prefix="/api/v1")
+# All API routes are prefixed with /jinhengtai for proxy compatibility
+api_router = APIRouter(prefix="/jinhengtai/api/v1")
+api_router.include_router(products.router, prefix="/products", tags=["Products"])
+api_router.include_router(categories.router, prefix="/categories", tags=["Categories"])
+api_router.include_router(orders.router, prefix="/orders", tags=["Orders"])
+api_router.include_router(banners.router, prefix="/banners", tags=["Banners"])
+api_router.include_router(stock.router, prefix="/stock", tags=["Stock"])
+
+app.include_router(api_router)
+
 
 # --- Web Admin Routes ---
-app.include_router(admin_web_router, tags=["admin-web"])
-app.include_router(admin_api_router.router, prefix="/admin/api", tags=["admin-api"])
+# The /admin routes are for the web-based administrative interface.
+app.include_router(web_router, tags=["Admin Web"])
+# The /admin/api routes are for internal API calls from the admin interface.
+app.include_router(admin_api_router.router, prefix="/admin/api", tags=["Admin API"])
 
 
 @app.get("/")

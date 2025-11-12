@@ -1,81 +1,36 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>新建入库记录</title>
-    <style>
-        body { font-family: sans-serif; margin: 2em; }
-        .form-group { margin-bottom: 1em; }
-        label { display: block; margin-bottom: 0.5em; }
-        input, select { width: 100%; padding: 8px; box-sizing: border-box; }
-        button { padding: 10px 15px; }
-    </style>
-</head>
-<body>
-    <h1>新建入库记录</h1>
-    <a href="/admin/stock">返回入库列表</a>
-    <form id="stockForm">
-        <div class="form-group">
-            <label for="movement_type">记录类型</label>
-            <select id="movement_type" name="movement_type">
-                <option value="stock_in">采购入库</option>
-                <option value="stock_out_return">采购退货</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="product_id">商品</label>
-            <select id="product_id" name="product_id" required>
-                <option value="" disabled selected>请选择一个商品</option>
+{% extends "base.html" %}
+
+{% block title %}Add Stock Record{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Add New Stock In Record</h2>
+    </div>
+
+    <form action="{{ url_for('create_stock_in_web') }}" method="post">
+        <div class="mb-3">
+            <label for="product_id" class="form-label">Product</label>
+            <select class="form-select" id="product_id" name="product_id" required>
+                <option value="" disabled selected>Select a product</option>
                 {% for product in products %}
-                    <option value="{{ product.id }}">{{ product.name }}</option>
+                <option value="{{ product.id }}">{{ product.name }} (Current Stock: {{ product.stock_quantity }})</option>
                 {% endfor %}
             </select>
         </div>
-        <div class="form-group">
-            <label for="quantity">数量</label>
-            <input type="number" id="quantity" name="quantity" required>
+
+        <div class="mb-3">
+            <label for="quantity" class="form-label">Quantity</label>
+            <input type="number" class="form-control" id="quantity" name="quantity" min="1" required>
         </div>
-        <div class="form-group">
-            <label for="reference_id">关联单号</label>
-            <input type="text" id="reference_id" name="reference_id">
+
+        <div class="mb-3">
+            <label for="reference_id" class="form-label">Reference / Memo</label>
+            <input type="text" class="form-control" id="reference_id" name="reference_id" placeholder="e.g., 'Manual Entry', 'Initial Stock'">
         </div>
-        <button type="submit">保存</button>
+
+        <button type="submit" class="btn btn-primary">Add Stock</button>
+        <a href="{{ url_for('list_stock_movements_web') }}" class="btn btn-secondary">Cancel</a>
     </form>
-
-    <script>
-        document.getElementById('stockForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            const movementType = document.getElementById('movement_type').value;
-            const product_id = parseInt(document.getElementById('product_id').value);
-            const quantity = parseInt(document.getElementById('quantity').value);
-            const reference_id = document.getElementById('reference_id').value;
-
-            const url = movementType === 'stock_in' ? '/api/v1/stock/in' : '/api/v1/stock/out-return';
-
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ product_id, quantity, reference_id }),
-            })
-            .then(response => {
-                if (response.ok) {
-                    alert('库存记录保存成功');
-                    window.location.href = '/admin/stock';
-                } else {
-                    response.json().then(data => {
-                        alert('保存库存记录失败: ' + data.detail);
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('发生了错误');
-            });
-        });
-    </script>
-</body>
-</html>
+</div>
+{% endblock %}
