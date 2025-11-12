@@ -7,7 +7,8 @@
         bindtap="onToggleSelect"
         data-id="{{item.id}}"
       />
-      <image class="product-image" src="{{item.image_url || '../../static/images/product_placeholder.png'}}" mode="aspectFill"/>
+      <image wx:if="{{item.image_url}}" class="product-image" src="{{item.image_url}}" mode="aspectFill"/>
+      <image wx:else class="product-image" src="/static/images/product_placeholder.png" mode="aspectFill"/>
       <view class="item-info">
         <view class="product-name">{{item.name}}</view>
         <view class="spec-row">

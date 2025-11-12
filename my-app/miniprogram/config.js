@@ -1,1 +1,1 @@
-export const API_BASE_URL = 'https://www.yidasoftware.xyz/jinhengtai/api/';
+export const API_BASE_URL = 'https://www.yidasoftware.xyz/jinhengtai/api/v1/';

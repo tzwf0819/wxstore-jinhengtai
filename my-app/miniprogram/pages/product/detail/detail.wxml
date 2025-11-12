@@ -1,7 +1,8 @@
 '''<view class="container">
   <view wx:if="{{loading}}" class="loading-tip">加载中...</view>
   <block wx:if="{{!loading && product}}">
-    <image class="product-image" src="{{product.image_url || '../../../static/images/product_placeholder.png'}}" mode="widthFix"></image>
+    <image wx:if="{{product.image_url}}" class="product-image" src="{{product.image_url}}" mode="widthFix"></image>
+    <image wx:else class="product-image" src="/static/images/product_placeholder.png" mode="widthFix"></image>
     
     <view class="product-info">
       <view class="price-bar">
