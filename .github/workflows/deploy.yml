@@ -97,10 +97,8 @@ jobs:
           fi
 
           echo "Forcing pip to use official PyPI..."
-          sudo tee "${VENV_DIR}/pip.conf" > /dev/null <<EOF
-[global]
-index-url = https://pypi.org/simple
-EOF
+          echo -e "[global]
+          index-url = https://pypi.org/simple" | sudo tee "${VENV_DIR}/pip.conf" > /dev/null
 
           echo "Installing Python dependencies..."
           sudo "${VENV_DIR}/bin/pip" install --upgrade pip
