@@ -23,14 +23,14 @@ app.add_middleware(
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 static_dir = os.path.join(BASE_DIR, "static")
 os.makedirs(os.path.join(static_dir, "uploads"), exist_ok=True)
-app.mount("/jinhengtai/static", StaticFiles(directory=static_dir), name="static")
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # --- API Routes ---
-app.include_router(api_router, prefix="/jinhengtai/api/v1")
+app.include_router(api_router, prefix="/api/v1")
 
 # --- Web Admin Routes ---
-app.include_router(admin_web_router, prefix="/jinhengtai", tags=["admin-web"])
-app.include_router(admin_api_router.router, prefix="/jinhengtai/admin/api", tags=["admin-api"])
+app.include_router(admin_web_router, tags=["admin-web"])
+app.include_router(admin_api_router.router, prefix="/admin/api", tags=["admin-api"])
 
 
 @app.get("/")

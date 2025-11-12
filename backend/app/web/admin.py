@@ -22,7 +22,7 @@ UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
 @router.get("/admin", response_class=HTMLResponse)
 async def admin_home(request: Request):
-    return RedirectResponse(url="/admin/products")
+    return RedirectResponse(url=request.url_for('list_products_web'))
 
 @router.get("/admin/products", response_class=HTMLResponse)
 async def list_products_web(request: Request, db: Session = Depends(deps.get_db)):
@@ -42,6 +42,7 @@ async def new_product_form(request: Request):
 
 @router.post("/admin/products/new")
 async def create_product_web(
+    request: Request,
     name: str = Form(...),
     description: str = Form(None),
     price: float = Form(...),
@@ -62,10 +63,11 @@ async def create_product_web(
         image_url=image_url, stock_quantity=0
     )
     api_products.create_product(product_in=product_in, db=db)
-    return RedirectResponse(url="/admin/products", status_code=303)
+    return RedirectResponse(url=request.url_for('list_products_web'), status_code=303)
 
 @router.post("/admin/products/edit/{product_id}")
 async def update_product_web(
+    request: Request,
     product_id: int,
     name: str = Form(...),
     description: str = Form(None),
@@ -91,7 +93,7 @@ async def update_product_web(
         image_url=image_url
     )
     api_products.update_product(product_id=product_id, product_in=product_in, db=db)
-    return RedirectResponse(url="/admin/products", status_code=303)
+    return RedirectResponse(url=request.url_for('list_products_web'), status_code=303)
 
 # --- Banner Management Routes ---
 
@@ -106,6 +108,7 @@ async def new_banner_form(request: Request):
 
 @router.post("/admin/banners/new")
 async def create_banner_web(
+    request: Request,
     link_url: str = Form(None),
     sort_order: int = Form(1),
     is_active: bool = Form(False),
@@ -127,7 +130,7 @@ async def create_banner_web(
         is_active=is_active,
     )
     api_banners.create_banner(db=db, banner_in=banner_in)
-    return RedirectResponse(url="/admin/banners", status_code=303)
+    return RedirectResponse(url=request.url_for('list_banners_web'), status_code=303)
 
 @router.get("/admin/banners/edit/{banner_id}", response_class=HTMLResponse)
 async def edit_banner_form(request: Request, banner_id: int, db: Session = Depends(deps.get_db)):
@@ -138,6 +141,7 @@ async def edit_banner_form(request: Request, banner_id: int, db: Session = Depen
 
 @router.post("/admin/banners/edit/{banner_id}")
 async def update_banner_web(
+    request: Request,
     banner_id: int,
     link_url: str = Form(None),
     sort_order: int = Form(1),
@@ -167,13 +171,13 @@ async def update_banner_web(
         is_active=is_active_bool,
     )
     api_banners.update_banner(db=db, banner_id=banner_id, banner_in=banner_in)
-    return RedirectResponse(url="/admin/banners", status_code=303)
+    return RedirectResponse(url=request.url_for('list_banners_web'), status_code=303)
 
 
 @router.post("/admin/banners/delete/{banner_id}")
-async def delete_banner_web(banner_id: int, db: Session = Depends(deps.get_db)):
+async def delete_banner_web(request: Request, banner_id: int, db: Session = Depends(deps.get_db)):
     api_banners.delete_banner(db=db, banner_id=banner_id)
-    return RedirectResponse(url="/admin/banners", status_code=303)
+    return RedirectResponse(url=request.url_for('list_banners_web'), status_code=303)
 
 
 # --- Category Management Routes ---
@@ -189,12 +193,13 @@ async def new_category_form(request: Request):
 
 @router.post("/admin/categories/new")
 async def create_category_web(
+    request: Request,
     name: str = Form(...),
     db: Session = Depends(deps.get_db)
 ):
     category_in = schemas.CategoryCreate(name=name)
     api_categories.create_category(db=db, category_in=category_in)
-    return RedirectResponse(url="/admin/categories", status_code=303)
+    return RedirectResponse(url=request.url_for('list_categories_web'), status_code=303)
 
 @router.get("/admin/categories/edit/{category_id}", response_class=HTMLResponse)
 async def edit_category_form(request: Request, category_id: int, db: Session = Depends(deps.get_db)):
@@ -205,6 +210,7 @@ async def edit_category_form(request: Request, category_id: int, db: Session = D
 
 @router.post("/admin/categories/edit/{category_id}")
 async def update_category_web(
+    request: Request,
     category_id: int,
     name: str = Form(...),
     db: Session = Depends(deps.get_db)
@@ -213,12 +219,12 @@ async def update_category_web(
     updated_category = api_categories.update_category(db=db, category_id=category_id, category_in=category_in)
     if not updated_category:
         return HTMLResponse(status_code=404, content="Category not found")
-    return RedirectResponse(url="/admin/categories", status_code=303)
+    return RedirectResponse(url=request.url_for('list_categories_web'), status_code=303)
 
 @router.post("/admin/categories/delete/{category_id}")
-async def delete_category_web(category_id: int, db: Session = Depends(deps.get_db)):
+async def delete_category_web(request: Request, category_id: int, db: Session = Depends(deps.get_db)):
     api_categories.delete_category(db=db, category_id=category_id)
-    return RedirectResponse(url="/admin/categories", status_code=303)
+    return RedirectResponse(url=request.url_for('list_categories_web'), status_code=303)
 
 
 # --- Order Management Routes (Read-Only) ---
@@ -242,7 +248,3 @@ async def view_order_web(request: Request, order_id: int, db: Session = Depends(
 async def list_stock_movements_web(request: Request, db: Session = Depends(deps.get_db)):
     stock_movements = api_stock.list_stock_movements(db=db, skip=0, limit=200) # Fetch latest 200 movements
     return templates.TemplateResponse("stock_list.html", {"request": request, "movements": stock_movements})
-
-
-
-
