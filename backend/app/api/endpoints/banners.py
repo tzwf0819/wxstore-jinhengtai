@@ -4,12 +4,12 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.api import deps
 from app.models.banner import Banner
-from app.schemas.banner import Banner as BannerSchema
+from app.schemas.banner import BannerRead
 
 router = APIRouter()
 
 
-@router.get("/", response_model=List[BannerSchema])
+@router.get("/", response_model=List[BannerRead])
 def read_banners(
     db: Session = Depends(deps.get_db),
 ):
