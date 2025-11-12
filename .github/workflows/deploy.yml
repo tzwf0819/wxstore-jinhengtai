@@ -98,7 +98,7 @@ jobs:
 
           echo "Installing Python dependencies..."
           sudo "${VENV_DIR}/bin/pip" install --upgrade pip
-          sudo "${VENV_DIR}/bin/pip" install -r "${BACKEND_DIR}/requirements.txt"
+          sudo "${VENV_DIR}/bin/pip" install --index-url https://pypi.org/simple -r "${BACKEND_DIR}/requirements.txt"
 
           echo "Creating .env file..."
           sudo tee "${BACKEND_DIR}/.env" > /dev/null <<EOF
