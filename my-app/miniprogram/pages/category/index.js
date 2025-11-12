@@ -18,7 +18,9 @@ Page({
       const categories = await getCategories();
       this.setData({ categories: categories || [] });
       if (categories && categories.length > 0) {
-        this.onCategoryClick({ currentTarget: { dataset: { id: categories[0].id } } });
+        const firstCategory = categories[0];
+        // Pass both id and name for the initial load
+        this.onCategoryClick({ currentTarget: { dataset: { id: firstCategory.id, name: firstCategory.name } } });
       }
     } catch (error) {
       console.error("Failed to load categories:", error);
@@ -27,18 +29,21 @@ Page({
   },
 
   onCategoryClick: function (e) {
-    const id = e.currentTarget.dataset.id;
+    // Get both id and name from the dataset
+    const { id, name } = e.currentTarget.dataset;
     if (this.data.activeCategoryId === id) {
       return;
     }
     this.setData({ activeCategoryId: id, products: [] });
-    this.loadProducts(id);
+    // Pass the category NAME to loadProducts
+    this.loadProducts(name);
   },
 
-  loadProducts: async function (categoryId) {
+  loadProducts: async function (categoryName) {
     this.setData({ loading: true });
     try {
-      const products = await getProducts({ category_id: categoryId, page_size: 50 });
+      // Use 'category' and pass the name
+      const products = await getProducts({ category: categoryName, page_size: 50 });
       this.setData({ products: products || [] });
     } catch (error) {
       console.error("Failed to load products:", error);

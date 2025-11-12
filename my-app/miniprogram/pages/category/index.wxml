@@ -7,6 +7,7 @@
       class="nav-item {{activeCategoryId === item.id ? 'active' : ''}}"
       bindtap="onCategoryClick"
       data-id="{{item.id}}"
+      data-name="{{item.name}}"
     >
       {{item.name}}
     </view>

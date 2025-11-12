@@ -2,38 +2,41 @@
 
 {% block title %}商品管理{% endblock %}
 
+{% block sidebar %}
+    <h1>商品管理</h1>
+    <a href="/admin/products/new" role="button" class="primary">添加新商品</a>
+{% endblock %}
+
 {% block content %}
-    <div class="container">
-        <h1 class="title">商品管理</h1>
-        <a href="/admin/products/new" role="button">添加新商品</a>
-        <table class="table is-striped is-fullwidth">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>商品名称</th>
-                    <th>价格</th>
-                    <th>库存</th>
-                    <th>分类</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for product in products %}
-                <tr>
-                    <td>{{ product.id }}</td>
-                    <td>{{ product.name }}</td>
-                    <td>¥{{ product.price }}</td>
-                    <td>{{ product.current_stock }}</td>
-                    <td>{{ product.category.name }}</td>
-                    <td>
-                        <a href="/admin/products/edit/{{ product.id }}">编辑</a>
-                        <form action="/admin/products/delete/{{ product.id }}" method="post" style="display:inline;">
-                            <button type="submit" onclick="return confirm('您确定要删除这个商品吗？')" class="secondary">删除</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+<div class="table-wrapper">
+    <table role="grid">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>商品名称</th>
+                <th>价格</th>
+                <th>库存</th>
+                <th>分类</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr>
+                <td>{{ product.id }}</td>
+                <td>{{ product.name }}</td>
+                <td>¥{{ product.price }}</td>
+                <td>{{ product.current_stock }}</td>
+                <td>{{ product.category }}</td>
+                <td>
+                    <a href="/admin/products/edit/{{ product.id }}" class="contrast">编辑</a>
+                    <form action="/admin/products/delete/{{ product.id }}" method="post" style="display:inline;">
+                        <button type="submit" onclick="return confirm('您确定要删除这个商品吗？')" class="secondary outline">删除</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}

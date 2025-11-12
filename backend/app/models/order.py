@@ -14,7 +14,7 @@ class Order(Base):
     shipping_address = Column(NVARCHAR(255), nullable=False)
     shipping_contact = Column(NVARCHAR(255))
 
-    items = relationship("OrderItem", back_populates="order")
+    items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
 
 class OrderItem(Base):
     __tablename__ = "order_items"

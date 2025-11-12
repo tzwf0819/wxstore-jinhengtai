@@ -1,5 +1,6 @@
 
 {
+  "lazyCodeLoading": "requiredComponents",
   "pages": [
     "pages/home/home",
     "pages/category/index",
@@ -13,7 +14,7 @@
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#4CAF50",
-    "navigationBarTitleText": "锦亨泰商城",
+    "navigationBarTitleText": "YidaWemall",
     "navigationBarTextStyle": "white"
   },
   "tabBar": {

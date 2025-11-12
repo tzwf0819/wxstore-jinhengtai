@@ -5,25 +5,103 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Admin{% endblock %}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', path='/admin-styles.css') }}">
+    <style>
+        :root {
+            --primary: #66BB6A;
+            --primary-hover: #5eac62;
+            --card-background-color: #ffffff;
+            --card-border-color: #e5e7eb;
+            --table-header-background: #fdfdfd;
+        }
+
+        html, body {
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .app-layout {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        nav.container-fluid {
+            flex-shrink: 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            z-index: 10;
+            background-color: white;
+        }
+
+        .content-layout {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            flex: 0 0 240px;
+            padding: 1.5rem;
+            background-color: #fdfdfd;
+            border-right: 1px solid var(--card-border-color);
+        }
+
+        .main-content {
+            flex-grow: 1;
+            overflow-y: auto; /* Main scrolling area */
+            padding: 1.5rem;
+        }
+
+        .sidebar h1 {
+             margin-bottom: 1.5rem; 
+        }
+
+        .sidebar a.primary {
+            display: block;
+            text-align: center;
+        }
+
+        /* Form container for edit/new pages */
+        .form-container {
+            max-width: 720px;
+            margin: 0 auto;
+        }
+
+        .form-container .card {
+            padding: 2rem;
+            background-color: var(--card-background-color);
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+    </style>
 </head>
 <body>
-    <nav class="container-fluid">
-        <ul>
-            <li><strong>锦亨泰商城 Admin</strong></li>
-        </ul>
-        <ul>
-            <li><a href="/admin/products">商品管理</a></li>
-            <li><a href="/admin/orders">订单管理</a></li>
-            <li><a href="/admin/categories">分类管理</a></li>
-            <li><a href="/admin/banners">轮播图管理</a></li>
-            <li><a href="/admin/stock">库存记录</a></li>
-        </ul>
-    </nav>
-
-    <main class="container">
-        {% block content %}{% endblock %}
-    </main>
-
+    <div class="app-layout">
+        <nav class="container-fluid">
+            <ul>
+                <li><strong>锦亨泰商城 Admin</strong></li>
+            </ul>
+            <ul>
+                <li><a href="/admin/products">商品管理</a></li>
+                <li><a href="/admin/orders">订单管理</a></li>
+                <li><a href="/admin/categories">分类管理</a></li>
+                <li><a href="/admin/banners">轮播图管理</a></li>
+                <li><a href="/admin/stock">库存记录</a></li>
+            </ul>
+        </nav>
+        <div class="content-layout">
+            <aside class="sidebar">
+                {% block sidebar %}
+                <!-- Default sidebar content can go here -->
+                {% endblock %}
+            </aside>
+            <main class="main-content">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
 </body>
 </html>
