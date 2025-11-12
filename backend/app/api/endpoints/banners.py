@@ -23,7 +23,7 @@ def create_banner(
     return banner
 
 
-@router.get("/", response_model=List[BannerRead])
+@router.get("", response_model=List[BannerRead])
 def read_banners(
     db: Session = Depends(deps.get_db),
 ):

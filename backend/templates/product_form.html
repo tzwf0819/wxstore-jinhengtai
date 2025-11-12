@@ -8,7 +8,6 @@
 
 {% block content %}
 <div class="form-container">
-    {# The H1 title is removed as requested #}
     <form action="{% if is_edit %}/admin/products/edit/{{ product.id }}{% else %}/admin/products/new{% endif %}" method="post" enctype="multipart/form-data" class="card">
         <label for="name">商品名称</label>
         <input type="text" id="name" name="name" value="{{ product.name if product else '' }}" required>
@@ -23,12 +22,37 @@
         <input type="text" id="category" name="category" value="{{ product.category if product else '' }}">
 
         <label for="image">商品图片 (可选)</label>
-        {% if product and product.image_url %}
-            <img src="{{ product.image_url }}" alt="Current Image" style="max-width: 150px; max-height: 150px; display: block; margin-bottom: 1rem; border-radius: var(--border-radius);">
-        {% endif %}
+        
+        <!-- Unified Image Preview Box -->
+        <img id="image-preview" 
+             src="{% if product and product.image_url %}{{ product.image_url }}{% endif %}" 
+             alt="Image Preview" 
+             style="max-width: 150px; max-height: 150px; display: {% if product and product.image_url %}block{% else %}none{% endif %}; margin-bottom: 1rem; border-radius: var(--border-radius);">
+        
         <input type="file" id="image" name="image" accept="image/*">
 
         <button type="submit" style="margin-top: 1rem;">{% if is_edit %}更新商品{% else %}创建商品{% endif %}</button>
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const imageInput = document.getElementById('image');
+    const imagePreview = document.getElementById('image-preview');
+
+    imageInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block'; // Make it visible if it was hidden
+            };
+            
+            reader.readAsDataURL(file);
+        }
+    });
+});
+</script>
 {% endblock %}
