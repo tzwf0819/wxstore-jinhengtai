@@ -1,5 +1,4 @@
 import { getBanners, getHotProducts } from '../../services/product';
-import { API_BASE_URL } from '../../utils/api';
 
 Page({
   data: {

@@ -15,12 +15,8 @@ static_dir = os.path.join(current_dir, "static")
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # --- API Routes ---
-# The root path is handled by the reverse proxy (Nginx)
-# and the --root-path uvicorn argument.
-api_v1_router = APIRouter()
-api_v1_router.include_router(api_router, prefix="/api/v1")
-
-app.include_router(api_v1_router)
+app.include_router(api_router, prefix="/api/v1")
+app.include_router(api_router, prefix="/jinhengtai/api/v1")
 
 # --- Web Admin Routes ---
 app.include_router(admin_web_router, tags=["admin-web"])

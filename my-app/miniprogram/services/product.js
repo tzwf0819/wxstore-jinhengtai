@@ -2,7 +2,7 @@
  * 商品数据服务
  */
 import { request } from './request';
-import { getSwiperList as getBanners } from './swiper'; // Assuming getBanners is in swiper.js
+ // Assuming getBanners is in swiper.js
 import { getCategoryList as getCategories } from './category'; // Assuming getCategories is in category.js
 
 const buildSortQuery = (orderBy) => {
