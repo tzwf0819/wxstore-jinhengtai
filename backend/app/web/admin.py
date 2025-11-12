@@ -116,25 +116,22 @@ async def new_banner_form(request: Request):
 @router.post("/admin/banners/new")
 async def create_banner_web(
     request: Request,
-    link_url: str = Form(None),
     sort_order: int = Form(1),
-    is_active: bool = Form(False), # Use bool, FastAPI handles conversion
+    is_active: bool = Form(False),
     image: UploadFile = File(...),
     db: Session = Depends(deps.get_db)
 ):
     image_url = None
     if image and image.filename:
-        # Sanitize filename to prevent security issues
         safe_filename = f"{uuid.uuid4()}_{pathlib.Path(image.filename).name}"
         file_path = UPLOADS_DIR / safe_filename
         with file_path.open("wb") as buffer:
             shutil.copyfileobj(image.file, buffer)
-        # Store relative path for use with url_for
         image_url = f"uploads/{safe_filename}"
 
     banner_in = BannerCreate(
         image_url=image_url,
-        link_url=link_url,
+        link_url="",  # Set link_url to empty string
         sort_order=sort_order,
         is_active=is_active,
     )
@@ -157,9 +154,8 @@ async def edit_banner_form(request: Request, banner_id: int, db: Session = Depen
 async def update_banner_web(
     request: Request,
     banner_id: int,
-    link_url: str = Form(None),
     sort_order: int = Form(1),
-    is_active: bool = Form(False), # Use bool for checkbox
+    is_active: bool = Form(False),
     image: UploadFile = File(None),
     db: Session = Depends(deps.get_db)
 ):
@@ -167,7 +163,7 @@ async def update_banner_web(
     if not db_banner:
         return HTMLResponse(status_code=404, content="Banner not found")
 
-    image_url = db_banner.image_url # Keep old image if no new one is uploaded
+    image_url = db_banner.image_url
     if image and image.filename:
         safe_filename = f"{uuid.uuid4()}_{pathlib.Path(image.filename).name}"
         file_path = UPLOADS_DIR / safe_filename
@@ -177,7 +173,7 @@ async def update_banner_web(
 
     banner_in = BannerUpdate(
         image_url=image_url,
-        link_url=link_url,
+        link_url="",  # Set link_url to empty string
         sort_order=sort_order,
         is_active=is_active,
     )

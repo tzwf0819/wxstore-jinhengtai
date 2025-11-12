@@ -12,17 +12,12 @@
             <label for="image" class="form-label">轮播图图片</label>
             <div>
                 <img id="image-preview" 
-                     src="{% if banner and banner.image_url %}{{ url_for('static', path=banner.image_url.split('/', 2)[-1]) }}{% else %}#{% endif %}" 
+                     src="{% if banner and banner.image_url %}{{ url_for('static', path=banner.image_url) }}{% else %}#{% endif %}" 
                      alt="Image Preview" 
                      class="img-thumbnail mb-2" 
                      style="max-width: 300px; max-height: 150px; display: {% if banner and banner.image_url %}block{% else %}none{% endif %}; object-fit: cover;">
             </div>
             <input type="file" class="form-control" id="image" name="image" accept="image/*" {% if not is_edit %}required{% endif %}>
-        </div>
-
-        <div class="mb-3">
-            <label for="link_url" class="form-label">链接 URL (可选)</label>
-            <input type="url" class="form-control" id="link_url" name="link_url" value="{{ banner.link_url if banner else '' }}">
         </div>
 
         <div class="mb-3">

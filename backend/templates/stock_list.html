@@ -2,51 +2,49 @@
 
 {% block title %}库存记录{% endblock %}
 
-{% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>库存记录</h2>
-        <a href="{{ url_for('new_stock_in_form') }}" class="btn btn-primary">添加入库记录</a>
-    </div>
+{% block sidebar %}
+    <h1>库存记录</h1>
     <p>查看所有商品的库存变动历史。</p>
+    <a href="{{ url_for('new_stock_in_form') }}" role="button" class="primary">添加入库记录</a>
+{% endblock %}
 
-    <div class="table-responsive">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>商品名称</th>
-                    <th>变动数量</th>
-                    <th>类型</th>
-                    <th>参考信息</th>
-                    <th>时间</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for movement in movements %}
-                <tr class="{% if movement.movement_type == 'VOID' or (movement.reference_id and 'voided_by_' in movement.reference_id) %}table-secondary text-muted{% endif %}">
-                    <td>{{ movement.id }}</td>
-                    <td>{{ movement.product.name if movement.product else 'N/A' }}</td>
-                    <td>{{ movement.quantity }}</td>
-                    <td>{{ movement.movement_type }}</td>
-                    <td>{{ movement.reference_id }}</td>
-                    <td>{{ movement.created_at.strftime('%Y-%m-%d %H:%M') if movement.created_at else '' }}</td>
-                    <td>
-                        {% if movement.movement_type != 'VOID' and (not movement.reference_id or 'voided_by_' not in movement.reference_id) %}
-                        <form action="{{ url_for('void_stock_movement_web', movement_id=movement.id) }}" method="post" onsubmit="return confirm('你确定要作废这条记录吗？此操作不可逆。');" class="d-inline">
-                            <button type="submit" class="btn btn-danger btn-sm">作废</button>
-                        </form>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="7" class="text-center">没有库存记录。</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+{% block content %}
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>商品名称</th>
+                <th>变动数量</th>
+                <th>类型</th>
+                <th>参考信息</th>
+                <th>时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for movement in movements %}
+            <tr class="{% if movement.movement_type == 'VOID' or (movement.reference_id and 'voided_by_' in movement.reference_id) %}table-secondary text-muted{% endif %}">
+                <td>{{ movement.id }}</td>
+                <td>{{ movement.product.name if movement.product else 'N/A' }}</td>
+                <td>{{ movement.quantity }}</td>
+                <td>{{ movement.movement_type }}</td>
+                <td>{{ movement.reference_id }}</td>
+                <td>{{ movement.created_at.strftime('%Y-%m-%d %H:%M') if movement.created_at else '' }}</td>
+                <td>
+                    {% if movement.movement_type != 'VOID' and (not movement.reference_id or 'voided_by_' not in movement.reference_id) %}
+                    <form action="{{ url_for('void_stock_movement_web', movement_id=movement.id) }}" method="post" onsubmit="return confirm('你确定要作废这条记录吗？此操作不可逆。');" class="d-inline">
+                        <button type="submit" class="btn btn-danger btn-sm">作废</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="text-center">没有库存记录。</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% endblock %}
