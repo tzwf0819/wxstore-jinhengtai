@@ -29,10 +29,12 @@
                 <td>{{ product.current_stock }}</td>
                 <td>{{ product.category }}</td>
                 <td>
-                    <a href="/admin/products/edit/{{ product.id }}" class="contrast">编辑</a>
-                    <form action="/admin/products/delete/{{ product.id }}" method="post" style="display:inline;">
-                        <button type="submit" onclick="return confirm('您确定要删除这个商品吗？')" class="secondary outline">删除</button>
-                    </form>
+                    <div class="action-buttons">
+                        <a href="/admin/products/edit/{{ product.id }}" role="button" class="secondary outline">编辑</a>
+                        <form action="/admin/products/delete/{{ product.id }}" method="post">
+                            <button type="submit" onclick="return confirm('您确定要删除这个商品吗？')" class="destructive outline">删除</button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             {% endfor %}

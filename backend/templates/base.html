@@ -76,6 +76,53 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.04);
         }
 
+        /* Compact UI Adjustments */
+        html {
+            font-size: 90%; /* Reduce base font size for a more compact UI */
+        }
+
+        .sidebar {
+            flex: 0 0 220px; /* Slightly reduce sidebar width */
+        }
+
+        table[role="grid"] th,
+        table[role="grid"] td {
+            padding: 0.6rem 0.75rem; /* Reduce table cell padding */
+        }
+
+        table[role="grid"] td .contrast,
+        table[role="grid"] td .secondary {
+            --font-size: 0.8em;
+            --padding-v: 0.3em;
+            --padding-h: 0.6em;
+            margin: 0;
+        }
+
+        table[role="grid"] td form {
+            vertical-align: middle;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem; /* Space between buttons */
+            align-items: center;
+        }
+
+        .action-buttons form {
+            margin-bottom: 0;
+        }
+
+        /* Destructive action button style (e.g., delete) */
+        .destructive.outline {
+            --background-color: var(--card-background-color);
+            --border-color: #ef4444; /* Red border */
+            --color: #ef4444; /* Red text */
+        }
+
+        .destructive.outline:hover {
+            --background-color: #fef2f2; /* Lighter red on hover */
+        }
+
     </style>
 </head>
 <body>
