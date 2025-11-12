@@ -1,4 +1,5 @@
 from sqlalchemy import Boolean, Column, Integer
+from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.mssql import NVARCHAR
 
 from .base import Base
@@ -12,4 +13,3 @@ class Category(Base):
     icon_url = Column(NVARCHAR(512))
     sort_order = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)
-

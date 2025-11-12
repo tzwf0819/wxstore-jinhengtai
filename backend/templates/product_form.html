@@ -16,11 +16,7 @@
             <input type="number" id="price" name="price" step="0.01" value="{{ product.price if product else '' }}" required>
             
             <label for="category">分类</label>
-            <select id="category" name="category" required>
-                {% for category in categories %}
-                    <option value="{{ category.name }}" {% if product and product.category == category.name %}selected{% endif %}>{{ category.name }}</option>
-                {% endfor %}
-            </select>
+            <input type="text" id="category" name="category" value="{{ product.category if product else '' }}">
 
             <label for="image_url">图片链接</label>
             <input type="text" id="image_url" name="image_url" value="{{ product.image_url if product else '' }}">

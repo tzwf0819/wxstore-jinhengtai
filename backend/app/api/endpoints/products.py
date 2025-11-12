@@ -17,14 +17,14 @@ def get_all_products(
     page_size: int,
     sort_by: str,
     sort_order: str,
-    category: str | None,
+    category: str | None,  # Changed from category_id to category
 ) -> list[schemas.ProductRead]:
     offset = (page - 1) * page_size
     
     query = select(models.Product)
 
     if category is not None:
-        query = query.where(models.Product.category == category)
+        query = query.where(models.Product.category == category) # Filter by name
 
     sort_field = getattr(models.Product, sort_by, models.Product.created_at)
     if sort_order.lower() == "desc":
@@ -54,7 +54,7 @@ def list_products(
     page_size: int = Query(200, ge=1, le=200, description="Page size"),
     sort_by: str = Query("created_at", description="Sort by field"),
     sort_order: str = Query("desc", description="Sort order (asc/desc)"),
-    category: str = Query(None, description="Filter by category name"),
+    category: str = Query(None, description="Filter by category name"), # Changed from category_id
 ) -> list[schemas.ProductRead]:
     return get_all_products(db, page, page_size, sort_by, sort_order, category)
 
@@ -63,7 +63,6 @@ def create_product(
     product_in: schemas.ProductCreate,
     db: Session = Depends(deps.get_db),
 ):
-    # ... (create_product logic remains the same)
     db_product = models.Product(
         name=product_in.name,
         description=product_in.description,
@@ -87,12 +86,13 @@ def create_product(
 
     return schemas.ProductRead.model_validate(db_product)
 
+# ... (The rest of the endpoints will be updated in the next steps)
+
 @router.get("/{product_id}", response_model=schemas.ProductRead)
 def read_product(
     product_id: int,
     db: Session = Depends(deps.get_db),
 ):
-    # ... (read_product logic remains the same)
     product = db.get(models.Product, product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -105,8 +105,6 @@ def read_product(
     product_read.current_stock = int(current_stock)
 
     return product_read
-
-# ... (update_product and delete_product logic remains the same)
 
 @router.put("/{product_id}", response_model=schemas.ProductRead)
 def update_product(
@@ -145,3 +143,4 @@ def delete_product(
     db.delete(db_product)
     db.commit()
     return
+

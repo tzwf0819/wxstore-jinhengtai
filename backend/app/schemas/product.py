@@ -15,9 +15,13 @@ class ProductCreate(ProductBase):
     pass
 
 
-class ProductUpdate(ProductBase):
-    stock_quantity: int | None = None  # Make stock_quantity optional for updates
-
+class ProductUpdate(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    price: float | None = None
+    stock_quantity: int | None = None
+    image_url: str | None = None
+    category: str | None = None
 
 
 class ProductRead(ProductBase):

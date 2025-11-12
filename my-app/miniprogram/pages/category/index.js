@@ -38,7 +38,7 @@ Page({
   loadProducts: async function (categoryId) {
     this.setData({ loading: true });
     try {
-      const products = await getProducts({ category: categoryId, page_size: 50 });
+      const products = await getProducts({ category_id: categoryId, page_size: 50 });
       this.setData({ products: products || [] });
     } catch (error) {
       console.error("Failed to load products:", error);

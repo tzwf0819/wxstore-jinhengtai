@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, Float, Integer, func
+from sqlalchemy import Column, DateTime, Float, Integer, func, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.mssql import NVARCHAR
 
@@ -15,7 +15,8 @@ class Product(Base):
     stock_quantity = Column(Integer, default=0, nullable=False)
     sales = Column(Integer, default=0, nullable=False)
     image_url = Column(NVARCHAR(255), nullable=True)
-    category = Column(NVARCHAR(100), nullable=True) # Simple text field for category
     created_at = Column(DateTime, server_default=func.now())
+
+    category = Column(NVARCHAR(255), nullable=True, index=True)
 
     items = relationship("OrderItem", back_populates="product")
