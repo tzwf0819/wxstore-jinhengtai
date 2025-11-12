@@ -8,6 +8,9 @@ export const request = ({ url, method = 'GET', data = {}, headers = {} }) => {
     return Promise.reject(new Error('API base URL not configured'));
   }
 
+  // Create a robust final URL by ensuring there is exactly one slash between parts.
+  const finalUrl = baseUrl.replace(/\/$/, '') + '/' + url.replace(/^\//, '');
+
   const requestHeaders = {
     'Content-Type': 'application/json',
     ...headers
@@ -15,7 +18,7 @@ export const request = ({ url, method = 'GET', data = {}, headers = {} }) => {
 
   return new Promise((resolve, reject) => {
     wx.request({
-      url: baseUrl + url,
+      url: finalUrl,
       method,
       data,
       header: requestHeaders,
