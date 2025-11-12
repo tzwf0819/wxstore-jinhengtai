@@ -39,7 +39,7 @@ jobs:
             # 3. 清理旧文件
             echo "Cleaning up old files..."
             cd "$PROJECT_DIR"
-            sudo find . -mindepth 1 ! -name '.env.bak' -exec rm -rf {} +
+            sudo find . -mindepth 1 ! -name '.env.bak' -exec rm -rf {} + || true
 
             # 4. 下载最新的代码 (简单 Wget 方法)
             echo "Downloading latest source code via wget..."
