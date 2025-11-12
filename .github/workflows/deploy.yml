@@ -17,59 +17,60 @@ jobs:
         with:
           host: ${{ secrets.JINHENGTAI_HOST }}
           username: ${{ secrets.JINHENGTAI_USERNAME }}
-          password: ${{ secrets.JINHENGTAI_PASSWORD }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }} # 使用我们之前创建的部署私钥
           script_stop: true
           command_timeout: 15m
           script: |
             set -euo pipefail
 
-            # 1. 定义此项目的独立部署目录
+            # 1. 定义部署目录
             PROJECT_DIR="/var/www/jinhengtai"
-            echo "--- Deploying to isolated directory: $PROJECT_DIR ---"
+            echo "--- Deploying to directory: $PROJECT_DIR ---"
             sudo mkdir -p "$PROJECT_DIR"
-            cd "$PROJECT_DIR"
 
-            # 2. 备份关键的 .env 文件 (如果存在)
-            if [ -f "backend/.env" ]; then
-              echo "Backing up existing .env file..."
-              sudo cp backend/.env .env.bak
+            # 2. 备份关键文件
+            TEMP_BACKUP="$(mktemp -d)"
+            echo "Creating temporary backup at: $TEMP_BACKUP"
+            if [ -f "$PROJECT_DIR/backend/.env" ]; then
+              sudo cp "$PROJECT_DIR/backend/.env" "$TEMP_BACKUP/backend.env"
+              echo "Backed up .env file."
             fi
 
-            # 3. 清理旧文件，但保留备份
+            # 3. 清理旧文件
             echo "Cleaning up old files..."
+            cd "$PROJECT_DIR"
             sudo find . -mindepth 1 ! -name '.env.bak' -exec rm -rf {} +
 
-            # 4. 下载最新的代码 (Public Repo)
-            echo "--- Cloning public repository ---"
+            # 4. 下载最新的代码 (简单 Wget 方法)
+            echo "Downloading latest source code via wget..."
+            wget -O latest.zip "https://github.com/${{ github.repository }}/archive/refs/heads/main.zip"
+            
+            # 解压并移动文件
+            TEMP_UNZIP_DIR="$(mktemp -d)"
+            unzip -q -o latest.zip -d "$TEMP_UNZIP_DIR"
+            # 找到解压出的目录名 (通常是 reponame-main)
+            EXTRACTED_DIR=$(ls "$TEMP_UNZIP_DIR")
+            sudo mv "$TEMP_UNZIP_DIR/$EXTRACTED_DIR"/* .
+            sudo mv "$TEMP_UNZIP_DIR/$EXTRACTED_DIR"/.* . 2>/dev/null || true
+            
+            # 清理下载和解压的临时文件
+            sudo rm -rf "$TEMP_UNZIP_DIR" latest.zip
+            echo "Code downloaded and extracted."
 
-            # 确保服务器上安装了 git
-            echo "Ensuring git is installed..."
-            if command -v yum &> /dev/null; then
-                sudo yum install -y git || echo "Yum command failed. Assuming git is present."
-            elif command -v apt-get &> /dev/null; then
-                sudo apt-get update -y > /dev/null && sudo apt-get install -y git || echo "Apt command failed. Assuming git is present."
+            # 5. 恢复备份
+            if [ -f "$TEMP_BACKUP/backend.env" ]; then
+              sudo mv "$TEMP_BACKUP/backend.env" "$PROJECT_DIR/backend/.env"
+              echo "Restored .env file."
+            fi
+            sudo rm -rf "$TEMP_BACKUP"
+
+            # 6. 运行项目自己的部署脚本
+            echo "Running the project deployment script..."
+            if [ -f "./deploy_jinhengtai.sh" ]; then
+              sudo chmod +x ./deploy_jinhengtai.sh
+              sudo ./deploy_jinhengtai.sh
             else
-                echo "Warning: No package manager found. Assuming git is present."
+              echo "Warning: deploy_jinhengtai.sh not found!"
             fi
 
-            # 直接通过 HTTPS 克隆公开仓库
-            echo "Cloning repository via HTTPS..."
-            TEMP_CLONE_DIR=$(mktemp -d)
-            git clone --depth 1 https://github.com/${{ github.repository }}.git "$TEMP_CLONE_DIR"
-
-            # 将克隆下来的所有文件移动到项目目录
-            echo "Moving files into project directory..."
-            sudo mv "$TEMP_CLONE_DIR"/* .
-            sudo mv "$TEMP_CLONE_DIR"/.* . 2>/dev/null || true
-            sudo rm -rf "$TEMP_CLONE_DIR"
-
-            # 5. 恢复 .env 文件
-            if [ -f ".env.bak" ]; then
-              echo "Restoring .env file..."
-              sudo mv .env.bak backend/.env
-            fi
-
-            # 6. 授予部署脚本执行权限并运行
-            echo "Running the deployment script on the server..."
-            sudo chmod +x ./deploy_jinhengtai.sh
-            sudo ./deploy_jinhengtai.sh
+            echo "Deployment script finished."
