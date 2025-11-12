@@ -1,173 +1,64 @@
-
-name: Deploy Project
+name: Deploy Jinhengtai Project
 
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'backend/**'
-      - '.github/workflows/deploy.yml'
   workflow_dispatch:
-    inputs:
-      setup_database:
-        description: 'Run database schema setup'
-        required: false
-        type: boolean
 
 jobs:
-  deploy-and-configure:
-    name: Deploy Backend and Configure Nginx
+  deploy:
+    name: Deploy to Production Server
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script_stop: true
+          command_timeout: 15m
+          script: |
+            set -euo pipefail
 
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.11"
-        cache: pip
-        cache-dependency-path: backend/requirements.txt
+            # 1. 定义此项目的独立部署目录
+            PROJECT_DIR="/var/www/jinhengtai"
+            echo "--- Deploying to isolated directory: $PROJECT_DIR ---"
+            sudo mkdir -p "$PROJECT_DIR"
+            cd "$PROJECT_DIR"
 
-    - name: Install dependencies
-      working-directory: backend
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+            # 2. 备份关键的 .env 文件 (如果存在)
+            if [ -f "backend/.env" ]; then
+              echo "Backing up existing .env file..."
+              sudo cp backend/.env .env.bak
+            fi
 
-    - name: Create .env file for testing
-      working-directory: backend
-      run: |
-        echo "SQL_SERVER_HOST=${{ secrets.JINHENGTAI_DB_HOST }}" >> .env
-        echo "SQL_SERVER_PORT=${{ secrets.JINHENGTAI_DB_PORT }}" >> .env
-        echo "SQL_SERVER_USER=${{ secrets.JINHENGTAI_DB_USER }}" >> .env
-        echo "SQL_SERVER_PASSWORD='${{ secrets.JINHENGTAI_DB_PASSWORD }}'" >> .env
-        echo "SQL_SERVER_DATABASE=${{ secrets.JINHENGTAI_DB_NAME }}" >> .env
+            # 3. 清理旧文件，但保留备份
+            echo "Cleaning up old files..."
+            # 删除所有文件和隐藏文件，除了 .env.bak
+            sudo find . -mindepth 1 ! -name '.env.bak' -exec rm -rf {} +
 
-    - name: Install test dependencies
-      working-directory: backend
-      run: pip install -r requirements-dev.txt
+            # 4. 下载最新的代码
+            echo "Downloading latest source code from main branch..."
+            wget -qO latest.zip "https://github.com/${{ github.repository }}/archive/refs/heads/main.zip"
+            unzip -q -o latest.zip
+            # 从解压出的带版本号的目录中，将所有文件（包括隐藏文件）移动到当前目录
+            EXTRACTED_DIR=$(unzip -Z1 latest.zip | head -1 | sed 's@/.*@@')
+            sudo mv "$EXTRACTED_DIR"/* .
+            sudo mv "$EXTRACTED_DIR"/.* . 2>/dev/null || true
+            rm latest.zip
+            rm -rf "$EXTRACTED_DIR"
 
-    - name: Run tests
-      working-directory: backend
-      run: pytest
+            # 5. 恢复 .env 文件
+            if [ -f ".env.bak" ]; then
+              echo "Restoring .env file..."
+              sudo mv .env.bak backend/.env
+            fi
 
-    - name: Create deployment package
-      working-directory: backend
-      run: tar -czf ../backend-deploy.tar.gz .
+            # 6. 授予部署脚本执行权限并运行
+            echo "Running the deployment script on the server..."
+            sudo chmod +x ./deploy_jinhengtai.sh
+            sudo ./deploy_jinhengtai.sh
 
-    - name: Deploy package to server
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.JINHENGTAI_HOST }}
-        username: ${{ secrets.JINHENGTAI_USERNAME }}
-        password: ${{ secrets.JINHENGTAI_PASSWORD }}
-        port: 22
-        source: "backend-deploy.tar.gz"
-        target: "/tmp/"
-
-    - name: Setup Backend and Nginx on Server
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.JINHENGTAI_HOST }}
-        username: ${{ secrets.JINHENGTAI_USERNAME }}
-        password: ${{ secrets.JINHENGTAI_PASSWORD }}
-        port: 22
-        timeout: 180s
-        script: |
-          set -euo pipefail
-          
-          # --- Backend Deployment ---
-          PROJECT_DIR="/opt/cloudbase"
-          BACKEND_DIR="${PROJECT_DIR}/backend"
-          VENV_DIR="${PROJECT_DIR}/venv"
-          SERVICE_NAME="jinhengtai-backend"
-          TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
-
-          echo "--- Starting backend deployment at ${TIMESTAMP} ---"
-          sudo mkdir -p "${PROJECT_DIR}" "${PROJECT_DIR}/backup"
-          if [ -d "${BACKEND_DIR}" ]; then
-              echo "Backing up existing backend..."
-              sudo mv "${BACKEND_DIR}" "/opt/cloudbase/backup/backend_${TIMESTAMP}"
-          fi
-          echo "Extracting new backend code..."
-          sudo mkdir -p "${BACKEND_DIR}"
-          sudo tar -xzf "/tmp/backend-deploy.tar.gz" -C "${BACKEND_DIR}"
-          sudo rm "/tmp/backend-deploy.tar.gz"
-
-          # The server's default python3 is 3.6, which is too old for fastapi==0.115.0.
-          # We will use python3.8, assuming it's available on the server.
-          # We also remove the old venv directory to ensure a clean environment.
-          echo "Recreating Python virtual environment with a modern Python version..."
-          sudo rm -rf "${VENV_DIR}"
-          sudo python3.11 -m venv "${VENV_DIR}"
-
-          echo "Installing Python dependencies..."
-          sudo "${VENV_DIR}/bin/pip" install --upgrade pip
-          sudo "${VENV_DIR}/bin/pip" install -r "${BACKEND_DIR}/requirements.txt"
-
-          echo "Creating .env file..."
-          sudo tee "${BACKEND_DIR}/.env" > /dev/null <<EOF
-          SQL_SERVER_HOST=${{ secrets.JINHENGTAI_DB_HOST }}
-          SQL_SERVER_PORT=${{ secrets.JINHENGTAI_DB_PORT }}
-          SQL_SERVER_USER=${{ secrets.JINHENGTAI_DB_USER }}
-          SQL_SERVER_PASSWORD='${{ secrets.JINHENGTAI_DB_PASSWORD }}'
-          SQL_SERVER_DATABASE=${{ secrets.JINHENGTAI_DB_NAME }}
-          EOF
-
-          echo "Creating/Updating systemd service file..."
-          SERVICE_FILE_CONTENT="[Unit]
-          Description=Jinhengtai Mall Backend FastAPI Service
-          After=network.target
-
-          [Service]
-          WorkingDirectory=${BACKEND_DIR}
-          ExecStart=${VENV_DIR}/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
-          Restart=always
-          User=root
-
-          [Install]
-          WantedBy=multi-user.target"
-          echo -e "$SERVICE_FILE_CONTENT" | sudo tee /etc/systemd/system/${SERVICE_NAME}.service > /dev/null
-
-          echo "Enabling and restarting the backend service..."
-          sudo systemctl daemon-reload
-          sudo systemctl enable ${SERVICE_NAME}
-          sudo systemctl restart "${SERVICE_NAME}"
-          sudo systemctl status "${SERVICE_NAME}" --no-pager
-          echo "--- Backend deployment finished successfully! ---"
-
-
-  setup-database:
-    name: Setup Database Schema
-    runs-on: ubuntu-latest
-    if: github.event.inputs.setup_database == 'true'
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup MSSQL Tools
-      run: |
-        curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-        curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
-        sudo apt-get update
-        sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18 unixodbc-dev
-        echo "/opt/mssql-tools18/bin" >> $GITHUB_PATH
-        
-    - name: Deploy and execute database schema
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.JINHENGTAI_HOST }}
-        username: ${{ secrets.JINHENGTAI_USERNAME }}
-        password: ${{ secrets.JINHENGTAI_PASSWORD }}
-        port: 22
-        script: |
-            echo "Initializing database schema..."
-            sqlcmd -S ${{ secrets.JINHENGTAI_DB_HOST }},${{ secrets.JINHENGTAI_DB_PORT }} \
-                   -U ${{ secrets.JINHENGTAI_DB_USER }} \
-                   -P '${{ secrets.JINHENGTAI_DB_PASSWORD }}' \
-                   -d ${{ secrets.JINHENGTAI_DB_NAME }} \
-                   -i /opt/cloudbase/backend/database/schema.sql \
-                   -C || echo "Database schema execution completed with warnings"
-            
-            echo "Database initialization completed!"
