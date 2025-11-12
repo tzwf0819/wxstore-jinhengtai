@@ -145,7 +145,7 @@ jobs:
           sudo tee /etc/nginx/sites-available/backend_proxy > /dev/null <<'EOF'
           server {
               listen 80;
-              server_name www.yidasoftware.xyz _;
+              server_name _;
 
               location /jinhengtai/ {
                   rewrite ^/jinhengtai/(.*)$ /$1 break;
