@@ -3,16 +3,16 @@
 {% block title %}{% if is_edit %}编辑轮播图{% else %}添加新轮播图{% endif %}{% endblock %}
 
 {% block sidebar %}
-    <a href="/admin/banners" class="secondary outline">← 返回轮播图列表</a>
+    <a href="/jinhengtai/admin/banners" class="secondary outline">← 返回轮播图列表</a>
 {% endblock %}
 
 {% block content %}
 <div class="form-container">
-    <form action="{% if is_edit %}/admin/banners/edit/{{ banner.id }}{% else %}/admin/banners/new{% endif %}" method="post" enctype="multipart/form-data" class="card">
+    <form action="{% if is_edit %}/jinhengtai/admin/banners/edit/{{ banner.id }}{% else %}/jinhengtai/admin/banners/new{% endif %}" method="post" enctype="multipart/form-data" class="card">
         
         <label for="image">轮播图图片</label>
         <img id="image-preview" 
-             src="{% if banner and banner.image_url %}{{ request.scope.get('root_path', '') }}{{ banner.image_url }}{% endif %}" 
+             src="{% if banner and banner.image_url %}/jinhengtai{{ banner.image_url }}{% endif %}" 
              alt="Image Preview" 
              style="max-width: 200px; max-height: 100px; display: {% if banner and banner.image_url %}block{% else %}none{% endif %}; margin-bottom: 1rem; border-radius: var(--border-radius); object-fit: cover;">
         <input type="file" id="image" name="image" accept="image/*" {% if not is_edit %}required{% endif %}>

@@ -3,12 +3,12 @@
 {% block title %}{% if is_edit %}编辑分类{% else %}添加新分类{% endif %}{% endblock %}
 
 {% block sidebar %}
-    <a href="/admin/categories" class="secondary outline">← 返回分类列表</a>
+    <a href="/jinhengtai/admin/categories" class="secondary outline">← 返回分类列表</a>
 {% endblock %}
 
 {% block content %}
 <div class="form-container">
-    <form action="{% if is_edit %}/admin/categories/edit/{{ category.id }}{% else %}/admin/categories/new{% endif %}" method="post" class="card">
+    <form action="{% if is_edit %}/jinhengtai/admin/categories/edit/{{ category.id }}{% else %}/jinhengtai/admin/categories/new{% endif %}" method="post" class="card">
         <label for="name">分类名称</label>
         <input type="text" id="name" name="name" value="{{ category.name if category else '' }}" required>
 

@@ -4,7 +4,7 @@
 
 {% block sidebar %}
     <h1>商品管理</h1>
-    <a href="/admin/products/new" role="button" class="primary">添加新商品</a>
+    <a href="/jinhengtai/admin/products/new" role="button" class="primary">添加新商品</a>
 {% endblock %}
 
 {% block content %}
@@ -30,8 +30,8 @@
                 <td>{{ product.category }}</td>
                 <td>
                     <div class="action-buttons">
-                        <a href="/admin/products/edit/{{ product.id }}" role="button" class="secondary outline">编辑</a>
-                        <form action="/admin/products/delete/{{ product.id }}" method="post">
+                        <a href="/jinhengtai/admin/products/edit/{{ product.id }}" role="button" class="secondary outline">编辑</a>
+                        <form action="/jinhengtai/admin/products/delete/{{ product.id }}" method="post">
                             <button type="submit" onclick="return confirm('您确定要删除这个商品吗？')" class="destructive outline">删除</button>
                         </form>
                     </div>

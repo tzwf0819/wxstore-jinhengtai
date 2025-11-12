@@ -4,7 +4,7 @@
 
 {% block sidebar %}
     <h1>轮播图管理</h1>
-    <a href="/admin/banners/new" role="button" class="primary">添加新轮播图</a>
+    <a href="/jinhengtai/admin/banners/new" role="button" class="primary">添加新轮播图</a>
 {% endblock %}
 
 {% block content %}
@@ -24,14 +24,14 @@
             {% for banner in banners %}
             <tr>
                 <td>{{ banner.id }}</td>
-                <td><img src="{{ request.scope.get('root_path', '') }}{{ banner.image_url }}" alt="Banner Image" style="max-width: 150px; max-height: 50px; object-fit: cover;"></td>
+                <td><img src="/jinhengtai{{ banner.image_url }}" alt="Banner Image" style="max-width: 150px; max-height: 50px; object-fit: cover;"></td>
                 <td>{{ banner.link_url }}</td>
                 <td>{{ banner.sort_order }}</td>
                 <td>{% if banner.is_active %}激活{% else %}禁用{% endif %}</td>
                 <td>
                     <div class="action-buttons">
-                        <a href="/admin/banners/edit/{{ banner.id }}" role="button" class="secondary outline">编辑</a>
-                        <form action="/admin/banners/delete/{{ banner.id }}" method="post">
+                        <a href="/jinhengtai/admin/banners/edit/{{ banner.id }}" role="button" class="secondary outline">编辑</a>
+                        <form action="/jinhengtai/admin/banners/delete/{{ banner.id }}" method="post">
                             <button type="submit" onclick="return confirm('您确定要删除这个轮播图吗？')" class="destructive outline">删除</button>
                         </form>
                     </div>

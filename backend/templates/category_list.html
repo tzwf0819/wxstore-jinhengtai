@@ -4,7 +4,7 @@
 
 {% block sidebar %}
     <h1>分类管理</h1>
-    <a href="/admin/categories/new" role="button" class="primary">添加新分类</a>
+    <a href="/jinhengtai/admin/categories/new" role="button" class="primary">添加新分类</a>
 {% endblock %}
 
 {% block content %}
@@ -24,8 +24,8 @@
                 <td>{{ category.name }}</td>
                 <td>
                     <div class="action-buttons">
-                        <a href="/admin/categories/edit/{{ category.id }}" role="button" class="secondary outline">编辑</a>
-                        <form action="/admin/categories/delete/{{ category.id }}" method="post">
+                        <a href="/jinhengtai/admin/categories/edit/{{ category.id }}" role="button" class="secondary outline">编辑</a>
+                        <form action="/jinhengtai/admin/categories/delete/{{ category.id }}" method="post">
                             <button type="submit" onclick="return confirm('您确定要删除这个分类吗？')" class="destructive outline">删除</button>
                         </form>
                     </div>

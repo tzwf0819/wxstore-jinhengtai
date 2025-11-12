@@ -3,12 +3,12 @@
 {% block title %}{% if is_edit %}编辑商品{% else %}添加新商品{% endif %}{% endblock %}
 
 {% block sidebar %}
-    <a href="/admin/products" class="secondary outline">← 返回商品列表</a>
+    <a href="/jinhengtai/admin/products" class="secondary outline">← 返回商品列表</a>
 {% endblock %}
 
 {% block content %}
 <div class="form-container">
-    <form action="{% if is_edit %}/admin/products/edit/{{ product.id }}{% else %}/admin/products/new{% endif %}" method="post" enctype="multipart/form-data" class="card">
+    <form action="{% if is_edit %}/jinhengtai/admin/products/edit/{{ product.id }}{% else %}/jinhengtai/admin/products/new{% endif %}" method="post" enctype="multipart/form-data" class="card">
         <label for="name">商品名称</label>
         <input type="text" id="name" name="name" value="{{ product.name if product else '' }}" required>
 
@@ -25,7 +25,7 @@
         
         <!-- Unified Image Preview Box -->
         <img id="image-preview" 
-             src="{% if product and product.image_url %}{{ request.scope.get('root_path', '') }}{{ product.image_url }}{% endif %}" 
+             src="{% if product and product.image_url %}/jinhengtai{{ product.image_url }}{% endif %}" 
              alt="Image Preview" 
              style="max-width: 150px; max-height: 150px; display: {% if product and product.image_url %}block{% else %}none{% endif %}; margin-bottom: 1rem; border-radius: var(--border-radius);">
         
