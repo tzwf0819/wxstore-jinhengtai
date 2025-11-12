@@ -127,11 +127,11 @@ async def create_banner_web(
         file_path = UPLOADS_DIR / safe_filename
         with file_path.open("wb") as buffer:
             shutil.copyfileobj(image.file, buffer)
-        image_url = f"uploads/{safe_filename}"
+        image_url = f"uploads/{safe_filename}"  # Correct relative path
 
     banner_in = BannerCreate(
         image_url=image_url,
-        link_url="",  # Set link_url to empty string
+        link_url="",
         sort_order=sort_order,
         is_active=is_active,
     )
@@ -144,9 +144,7 @@ async def edit_banner_form(request: Request, banner_id: int, db: Session = Depen
     banner = db.query(models.Banner).filter(models.Banner.id == banner_id).first()
     if not banner:
         return HTMLResponse(status_code=404, content="Banner not found")
-    # Ensure image_url is a relative path for the template
-    if banner.image_url and not banner.image_url.startswith('uploads/'):
-         banner.image_url = f"uploads/{pathlib.Path(banner.image_url).name}"
+    # No longer needed: The path is now consistently relative
     return templates.TemplateResponse("banner_form.html", {"request": request, "banner": banner, "is_edit": True})
 
 
@@ -169,11 +167,11 @@ async def update_banner_web(
         file_path = UPLOADS_DIR / safe_filename
         with file_path.open("wb") as buffer:
             shutil.copyfileobj(image.file, buffer)
-        image_url = f"uploads/{safe_filename}"
+        image_url = f"uploads/{safe_filename}"  # Correct relative path
 
     banner_in = BannerUpdate(
         image_url=image_url,
-        link_url="",  # Set link_url to empty string
+        link_url="",
         sort_order=sort_order,
         is_active=is_active,
     )
