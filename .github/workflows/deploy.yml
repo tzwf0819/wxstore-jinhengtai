@@ -42,10 +42,17 @@ jobs:
 
             # 4. 下载最新的代码 (Git Clone 方法)
             echo "Cloning latest source code from main branch..."
-            # 确保服务器上安装了 git
-            echo "Ensuring git is installed..."
-            sudo apt-get update -y > /dev/null
-            sudo apt-get install -y git
+# 确保服务器上安装了 git
+echo "Ensuring git is installed..."
+# 自动检测包管理器 (apt-get for Debian/Ubuntu, yum for CentOS) 并安装 git
+if command -v apt-get &> /dev/null; then
+    sudo apt-get update -y > /dev/null
+    sudo apt-get install -y git
+elif command -v yum &> /dev/null; then
+    sudo yum install -y git
+else
+    echo "Warning: Could not find apt-get or yum. Assuming git is already installed."
+fi
 
             # 创建一个临时目录进行克隆
             TEMP_CLONE_DIR=$(mktemp -d)
