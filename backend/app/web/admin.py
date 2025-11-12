@@ -127,7 +127,7 @@ async def create_banner_web(
         file_path = UPLOADS_DIR / safe_filename
         with file_path.open("wb") as buffer:
             shutil.copyfileobj(image.file, buffer)
-        image_url = f"uploads/{safe_filename}"  # Correct relative path
+        image_url = f"/static/uploads/{safe_filename}"
 
     banner_in = BannerCreate(
         image_url=image_url,
@@ -167,7 +167,7 @@ async def update_banner_web(
         file_path = UPLOADS_DIR / safe_filename
         with file_path.open("wb") as buffer:
             shutil.copyfileobj(image.file, buffer)
-        image_url = f"uploads/{safe_filename}"  # Correct relative path
+        image_url = f"/static/uploads/{safe_filename}"
 
     banner_in = BannerUpdate(
         image_url=image_url,
