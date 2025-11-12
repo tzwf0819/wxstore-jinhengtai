@@ -54,7 +54,7 @@ async def create_product_web(
         file_path = UPLOADS_DIR / unique_filename
         with file_path.open("wb") as buffer:
             shutil.copyfileobj(image.file, buffer)
-        image_url = f"/jinhengtai/static/uploads/{unique_filename}"
+        image_url = f"/static/uploads/{unique_filename}"
 
     product_in = schemas.ProductCreate(
         name=name, description=description, price=price, category=category, 
@@ -83,7 +83,7 @@ async def update_product_web(
         file_path = UPLOADS_DIR / unique_filename
         with file_path.open("wb") as buffer:
             shutil.copyfileobj(image.file, buffer)
-        image_url = f"/jinhengtai/static/uploads/{unique_filename}"
+        image_url = f"/static/uploads/{unique_filename}"
 
     product_in = schemas.ProductUpdate(
         name=name, description=description, price=price, category=category, 

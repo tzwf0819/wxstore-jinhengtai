@@ -1,17 +1,23 @@
 import os
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 
 from app.api import api_router
 from app.web.admin import router as admin_web_router
 from app.api.endpoints import admin as admin_api_router
 
-# Create the FastAPI app instance first
-app = FastAPI(title="Jinhengtai Mall API")
+# Load environment variables from .env file
+load_dotenv()
+
+# Get ROOT_PATH from environment, default to "" if not set
+ROOT_PATH = os.getenv("ROOT_PATH", "")
+
+# Create the FastAPI app instance with the root_path
+app = FastAPI(title="Jinhengtai Mall API", root_path=ROOT_PATH)
 
 # --- CORS Middleware ---
-# This should be added before any routes or static files
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Allows all origins
@@ -21,15 +27,19 @@ app.add_middleware(
 )
 
 # --- Static files and Templates ---
-# Get the absolute path to the directory containing main.py
-current_dir = os.path.dirname(os.path.abspath(__file__))
-static_dir = os.path.join(current_dir, "static")
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+static_dir = os.path.join(BASE_DIR, "static")
+os.makedirs(os.path.join(static_dir, "uploads"), exist_ok=True)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # --- API Routes ---
-# All API routes are now consistently prefixed with /api/v1
+# Keep routes clean, without the root_path prefix.
+# FastAPI will handle the prefixing automatically based on the root_path.
 app.include_router(api_router, prefix="/api/v1")
-app.include_router(api_router, prefix="/jinhengtai/api/v1")
+
+# --- Web Admin Routes ---
+app.include_router(admin_web_router, tags=["admin-web"])
+app.include_router(admin_api_router.router, prefix="/admin/api", tags=["admin-api"])
 
 # --- Web Admin Routes ---
 app.include_router(admin_web_router, tags=["admin-web"])

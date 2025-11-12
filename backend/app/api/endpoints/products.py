@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException, Request
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
@@ -54,7 +54,7 @@ def list_products(
     page_size: int = Query(200, ge=1, le=200, description="Page size"),
     sort_by: str = Query("created_at", description="Sort by field"),
     sort_order: str = Query("desc", description="Sort order (asc/desc)"),
-    category: str = Query(None, description="Filter by category name"), # Changed from category_id
+    category: str = Query(None, description="Filter by category name"),
 ) -> list[schemas.ProductRead]:
     return get_all_products(db, page, page_size, sort_by, sort_order, category)
 
