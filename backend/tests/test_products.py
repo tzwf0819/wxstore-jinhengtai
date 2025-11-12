@@ -4,7 +4,7 @@ from app import models, schemas
 
 def test_create_product(test_client: TestClient, db_session: Session):
     response = test_client.post(
-        "/jinhengtai/api/v1/products/",
+        "/api/v1/products/",
         json={"name": "Test Product", "description": "A test product", "price": 10.50, "stock_quantity": 100, "category": "Test"}
     )
     assert response.status_code == 200, response.text
@@ -24,7 +24,7 @@ def test_read_product(test_client: TestClient, db_session: Session):
     db_session.commit()
     db_session.refresh(product)
 
-    response = test_client.get(f"/jinhengtai/api/v1/products/{product.id}")
+    response = test_client.get(f"/api/v1/products/{product.id}")
     assert response.status_code == 200
     data = response.json()
     assert data["name"] == "Readable Product"
@@ -45,7 +45,7 @@ def test_update_product(test_client: TestClient, db_session: Session):
     }
 
     response = test_client.put(
-        f"/jinhengtai/api/v1/products/{product.id}",
+        f"/api/v1/products/{product.id}",
         json=update_payload
     )
     assert response.status_code == 200, response.text
@@ -62,7 +62,7 @@ def test_delete_product(test_client: TestClient, db_session: Session):
     db_session.add(movement)
     db_session.commit()
 
-    response = test_client.delete(f"/jinhengtai/api/v1/products/{product.id}")
+    response = test_client.delete(f"/api/v1/products/{product.id}")
     assert response.status_code == 204
 
     deleted_product = db_session.get(models.Product, product.id)
@@ -76,7 +76,7 @@ def test_list_products(test_client: TestClient, db_session: Session):
     db_session.add(models.Product(name="Product B", price=2.0, stock_quantity=2))
     db_session.commit()
 
-    response = test_client.get("/jinhengtai/api/v1/products/")
+    response = test_client.get("/api/v1/products/")
     assert response.status_code == 200
     data = response.json()
     assert len(data) >= 2

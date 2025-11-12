@@ -4,7 +4,7 @@ from app import models
 
 def test_create_banner(test_client: TestClient):
     response = test_client.post(
-        "/jinhengtai/api/v1/banners/",
+        "/api/v1/banners/",
         json={
             "image_url": "/images/test_banner.jpg",
             "link_url": "/products/1",
@@ -23,7 +23,7 @@ def test_read_banner(test_client: TestClient, db_session: Session):
     db_session.commit()
     db_session.refresh(banner)
 
-    response = test_client.get(f"/jinhengtai/api/v1/banners/{banner.id}")
+    response = test_client.get(f"/api/v1/banners/{banner.id}")
     assert response.status_code == 200
     data = response.json()
     assert data["link_url"] == "/home"
@@ -35,7 +35,7 @@ def test_update_banner(test_client: TestClient, db_session: Session):
     db_session.refresh(banner)
 
     response = test_client.put(
-        f"/jinhengtai/api/v1/banners/{banner.id}",
+        f"/api/v1/banners/{banner.id}",
         json={"image_url": "/images/updated.jpg", "link_url": "/updated", "is_active": False, "sort_order": 1}
     )
     assert response.status_code == 200, response.text
@@ -49,9 +49,9 @@ def test_delete_banner(test_client: TestClient, db_session: Session):
     db_session.commit()
     db_session.refresh(banner)
 
-    response = test_client.delete(f"/jinhengtai/api/v1/banners/{banner.id}")
+    response = test_client.delete(f"/api/v1/banners/{banner.id}")
     assert response.status_code == 204
 
     # Verify that the banner is deleted by trying to fetch it again
-    response = test_client.get(f"/jinhengtai/api/v1/banners/{banner.id}")
+    response = test_client.get(f"/api/v1/banners/{banner.id}")
     assert response.status_code == 404
