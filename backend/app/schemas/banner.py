@@ -9,8 +9,11 @@ class BannerBase(BaseModel):
 class BannerCreate(BannerBase):
     pass
 
-class BannerUpdate(BannerBase):
-    pass
+class BannerUpdate(BaseModel):
+    image_url: str | None = None
+    link_url: str | None = None
+    is_active: bool | None = None
+    sort_order: int | None = None
 
 class BannerRead(BannerBase):
     id: int

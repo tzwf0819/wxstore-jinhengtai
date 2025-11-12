@@ -8,11 +8,16 @@
 
 {% block content %}
 <div class="form-container">
-    <form action="{% if is_edit %}/admin/banners/edit/{{ banner.id }}{% else %}/admin/banners/new{% endif %}" method="post" class="card">
-        <label for="image_url">图片 URL</label>
-        <input type="text" id="image_url" name="image_url" value="{{ banner.image_url if banner else '' }}" required>
+    <form action="{% if is_edit %}/admin/banners/edit/{{ banner.id }}{% else %}/admin/banners/new{% endif %}" method="post" enctype="multipart/form-data" class="card">
+        
+        <label for="image">轮播图图片</label>
+        <img id="image-preview" 
+             src="{% if banner and banner.image_url %}{{ request.scope.get('root_path', '') }}{{ banner.image_url }}{% endif %}" 
+             alt="Image Preview" 
+             style="max-width: 200px; max-height: 100px; display: {% if banner and banner.image_url %}block{% else %}none{% endif %}; margin-bottom: 1rem; border-radius: var(--border-radius); object-fit: cover;">
+        <input type="file" id="image" name="image" accept="image/*" {% if not is_edit %}required{% endif %}>
 
-        <label for="link_url">链接 URL</label>
+        <label for="link_url">链接 URL (可选)</label>
         <input type="text" id="link_url" name="link_url" value="{{ banner.link_url if banner else '' }}">
 
         <label for="sort_order">排序</label>
@@ -20,7 +25,7 @@
         
         <fieldset>
             <label for="is_active">
-                <input type="checkbox" id="is_active" name="is_active" {% if banner and banner.is_active %}checked{% endif %}>
+                <input type="checkbox" id="is_active" name="is_active" value="true" {% if banner and banner.is_active %}checked{% endif %}>
                 激活
             </label>
         </fieldset>
@@ -28,4 +33,25 @@
         <button type="submit" style="margin-top: 1rem;">{% if is_edit %}更新轮播图{% else %}创建轮播图{% endif %}</button>
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const imageInput = document.getElementById('image');
+    const imagePreview = document.getElementById('image-preview');
+
+    imageInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block';
+            };
+            
+            reader.readAsDataURL(file);
+        }
+    });
+});
+</script>
 {% endblock %}

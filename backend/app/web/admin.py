@@ -7,7 +7,8 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 import pathlib
 
-from .. import models, schemas
+from .. import models
+from ..schemas import banner as banner_schemas
 from ..api import deps
 from ..api.endpoints import products as api_products, banners as api_banners, categories as api_categories, orders as api_orders, stock as api_stock
 
@@ -105,15 +106,25 @@ async def new_banner_form(request: Request):
 
 @router.post("/admin/banners/new")
 async def create_banner_web(
-    request: Request,
+    link_url: str = Form(None),
+    sort_order: int = Form(1),
+    is_active: bool = Form(False),
+    image: UploadFile = File(...),
     db: Session = Depends(deps.get_db)
 ):
-    form_data = await request.form()
-    banner_in = schemas.BannerCreate(
-        image_url=form_data.get("image_url"),
-        link_url=form_data.get("link_url"),
-        sort_order=int(form_data.get("sort_order", 1)),
-        is_active='is_active' in form_data,
+    image_url = None
+    if image and image.filename:
+        unique_filename = f"{uuid.uuid4()}_{image.filename}"
+        file_path = UPLOADS_DIR / unique_filename
+        with file_path.open("wb") as buffer:
+            shutil.copyfileobj(image.file, buffer)
+        image_url = f"/static/uploads/{unique_filename}"
+
+    banner_in = banner_schemas.BannerCreate(
+        image_url=image_url,
+        link_url=link_url,
+        sort_order=sort_order,
+        is_active=is_active,
     )
     api_banners.create_banner(db=db, banner_in=banner_in)
     return RedirectResponse(url="/admin/banners", status_code=303)
@@ -127,20 +138,35 @@ async def edit_banner_form(request: Request, banner_id: int, db: Session = Depen
 
 @router.post("/admin/banners/edit/{banner_id}")
 async def update_banner_web(
-    request: Request,
     banner_id: int,
+    link_url: str = Form(None),
+    sort_order: int = Form(1),
+    is_active: str = Form(None), # Receive as string to handle checkbox
+    image: UploadFile = File(None),
     db: Session = Depends(deps.get_db)
 ):
-    form_data = await request.form()
-    banner_in = schemas.BannerUpdate(
-        image_url=form_data.get("image_url"),
-        link_url=form_data.get("link_url"),
-        sort_order=int(form_data.get("sort_order")),
-        is_active='is_active' in form_data,
-    )
-    updated_banner = api_banners.update_banner(db=db, banner_id=banner_id, banner_in=banner_in)
-    if not updated_banner:
+    db_banner = db.get(models.Banner, banner_id)
+    if not db_banner:
         return HTMLResponse(status_code=404, content="Banner not found")
+
+    image_url = db_banner.image_url
+    if image and image.filename:
+        unique_filename = f"{uuid.uuid4()}_{image.filename}"
+        file_path = UPLOADS_DIR / unique_filename
+        with file_path.open("wb") as buffer:
+            shutil.copyfileobj(image.file, buffer)
+        image_url = f"/static/uploads/{unique_filename}"
+
+    # Convert is_active from form value ('true' or None) to boolean
+    is_active_bool = is_active == 'true'
+
+    banner_in = banner_schemas.BannerUpdate(
+        image_url=image_url,
+        link_url=link_url,
+        sort_order=sort_order,
+        is_active=is_active_bool,
+    )
+    api_banners.update_banner(db=db, banner_id=banner_id, banner_in=banner_in)
     return RedirectResponse(url="/admin/banners", status_code=303)
 
 

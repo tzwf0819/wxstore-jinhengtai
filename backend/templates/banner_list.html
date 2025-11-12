@@ -24,7 +24,7 @@
             {% for banner in banners %}
             <tr>
                 <td>{{ banner.id }}</td>
-                <td><img src="{{ banner.image_url }}" alt="Banner Image" style="max-width: 150px; max-height: 50px; object-fit: cover;"></td>
+                <td><img src="{{ request.scope.get('root_path', '') }}{{ banner.image_url }}" alt="Banner Image" style="max-width: 150px; max-height: 50px; object-fit: cover;"></td>
                 <td>{{ banner.link_url }}</td>
                 <td>{{ banner.sort_order }}</td>
                 <td>{% if banner.is_active %}激活{% else %}禁用{% endif %}</td>
