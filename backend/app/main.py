@@ -27,7 +27,7 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # --- API Routes ---
 # All API routes are prefixed with /jinhengtai for proxy compatibility
-api_router = APIRouter(prefix="/jinhengtai/api/v1")
+api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(products.router, prefix="/products", tags=["Products"])
 api_router.include_router(categories.router, prefix="/categories", tags=["Categories"])
 api_router.include_router(orders.router, prefix="/orders", tags=["Orders"])

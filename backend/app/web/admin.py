@@ -118,17 +118,19 @@ async def create_banner_web(
     request: Request,
     link_url: str = Form(None),
     sort_order: int = Form(1),
-    is_active: bool = Form(False),
+    is_active: bool = Form(False), # Use bool, FastAPI handles conversion
     image: UploadFile = File(...),
     db: Session = Depends(deps.get_db)
 ):
     image_url = None
     if image and image.filename:
-        unique_filename = f"{uuid.uuid4()}_{image.filename}"
-        file_path = UPLOADS_DIR / unique_filename
+        # Sanitize filename to prevent security issues
+        safe_filename = f"{uuid.uuid4()}_{pathlib.Path(image.filename).name}"
+        file_path = UPLOADS_DIR / safe_filename
         with file_path.open("wb") as buffer:
             shutil.copyfileobj(image.file, buffer)
-        image_url = f"/static/uploads/{unique_filename}"
+        # Store relative path for use with url_for
+        image_url = f"uploads/{safe_filename}"
 
     banner_in = BannerCreate(
         image_url=image_url,
@@ -139,12 +141,17 @@ async def create_banner_web(
     api_banners.create_banner(db=db, banner_in=banner_in)
     return RedirectResponse(url=request.url_for('list_banners_web'), status_code=303)
 
+
 @router.get("/admin/banners/edit/{banner_id}", response_class=HTMLResponse)
 async def edit_banner_form(request: Request, banner_id: int, db: Session = Depends(deps.get_db)):
     banner = db.query(models.Banner).filter(models.Banner.id == banner_id).first()
     if not banner:
         return HTMLResponse(status_code=404, content="Banner not found")
+    # Ensure image_url is a relative path for the template
+    if banner.image_url and not banner.image_url.startswith('uploads/'):
+         banner.image_url = f"uploads/{pathlib.Path(banner.image_url).name}"
     return templates.TemplateResponse("banner_form.html", {"request": request, "banner": banner, "is_edit": True})
+
 
 @router.post("/admin/banners/edit/{banner_id}")
 async def update_banner_web(
@@ -152,7 +159,7 @@ async def update_banner_web(
     banner_id: int,
     link_url: str = Form(None),
     sort_order: int = Form(1),
-    is_active: str = Form(None),
+    is_active: bool = Form(False), # Use bool for checkbox
     image: UploadFile = File(None),
     db: Session = Depends(deps.get_db)
 ):
@@ -160,21 +167,19 @@ async def update_banner_web(
     if not db_banner:
         return HTMLResponse(status_code=404, content="Banner not found")
 
-    image_url = db_banner.image_url
+    image_url = db_banner.image_url # Keep old image if no new one is uploaded
     if image and image.filename:
-        unique_filename = f"{uuid.uuid4()}_{image.filename}"
-        file_path = UPLOADS_DIR / unique_filename
+        safe_filename = f"{uuid.uuid4()}_{pathlib.Path(image.filename).name}"
+        file_path = UPLOADS_DIR / safe_filename
         with file_path.open("wb") as buffer:
             shutil.copyfileobj(image.file, buffer)
-        image_url = f"/static/uploads/{unique_filename}"
-
-    is_active_bool = is_active == 'true'
+        image_url = f"uploads/{safe_filename}"
 
     banner_in = BannerUpdate(
         image_url=image_url,
         link_url=link_url,
         sort_order=sort_order,
-        is_active=is_active_bool,
+        is_active=is_active,
     )
     api_banners.update_banner(db=db, banner_id=banner_id, banner_in=banner_in)
     return RedirectResponse(url=request.url_for('list_banners_web'), status_code=303)

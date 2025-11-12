@@ -2,35 +2,41 @@
 
 {% block title %}{% if is_edit %}编辑轮播图{% else %}添加新轮播图{% endif %}{% endblock %}
 
-{% block sidebar %}
-    <a href="/admin/banners" class="secondary outline">← 返回轮播图列表</a>
-{% endblock %}
-
 {% block content %}
-<div class="form-container">
-    <form action="{% if is_edit %}/admin/banners/edit/{{ banner.id }}{% else %}/admin/banners/new{% endif %}" method="post" enctype="multipart/form-data" class="card">
+<div class="container mt-4">
+    <h2>{% if is_edit %}编辑轮播图 #{{ banner.id }}{% else %}添加新轮播图{% endif %}</h2>
+
+    <form action="{% if is_edit %}{{ url_for('update_banner_web', banner_id=banner.id) }}{% else %}{{ url_for('create_banner_web') }}{% endif %}" method="post" enctype="multipart/form-data">
         
-        <label for="image">轮播图图片</label>
-        <img id="image-preview" 
-             src="{% if banner and banner.image_url %}{{ banner.image_url }}{% endif %}" 
-             alt="Image Preview" 
-             style="max-width: 200px; max-height: 100px; display: {% if banner and banner.image_url %}block{% else %}none{% endif %}; margin-bottom: 1rem; border-radius: var(--border-radius); object-fit: cover;">
-        <input type="file" id="image" name="image" accept="image/*" {% if not is_edit %}required{% endif %}>
+        <div class="mb-3">
+            <label for="image" class="form-label">轮播图图片</label>
+            <div>
+                <img id="image-preview" 
+                     src="{% if banner and banner.image_url %}{{ url_for('static', path=banner.image_url.split('/', 2)[-1]) }}{% else %}#{% endif %}" 
+                     alt="Image Preview" 
+                     class="img-thumbnail mb-2" 
+                     style="max-width: 300px; max-height: 150px; display: {% if banner and banner.image_url %}block{% else %}none{% endif %}; object-fit: cover;">
+            </div>
+            <input type="file" class="form-control" id="image" name="image" accept="image/*" {% if not is_edit %}required{% endif %}>
+        </div>
 
-        <label for="link_url">链接 URL (可选)</label>
-        <input type="text" id="link_url" name="link_url" value="{{ banner.link_url if banner else '' }}">
+        <div class="mb-3">
+            <label for="link_url" class="form-label">链接 URL (可选)</label>
+            <input type="url" class="form-control" id="link_url" name="link_url" value="{{ banner.link_url if banner else '' }}">
+        </div>
 
-        <label for="sort_order">排序</label>
-        <input type="number" id="sort_order" name="sort_order" value="{{ banner.sort_order if banner else 1 }}" required>
+        <div class="mb-3">
+            <label for="sort_order" class="form-label">排序</label>
+            <input type="number" class="form-control" id="sort_order" name="sort_order" value="{{ banner.sort_order if banner else 1 }}" required>
+        </div>
         
-        <fieldset>
-            <label for="is_active">
-                <input type="checkbox" id="is_active" name="is_active" value="true" {% if banner and banner.is_active %}checked{% endif %}>
-                激活
-            </label>
-        </fieldset>
+        <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" id="is_active" name="is_active" value="true" {% if banner and banner.is_active %}checked{% endif %}>
+            <label class="form-check-label" for="is_active">激活</label>
+        </div>
 
-        <button type="submit" style="margin-top: 1rem;">{% if is_edit %}更新轮播图{% else %}创建轮播图{% endif %}</button>
+        <button type="submit" class="btn btn-primary">{% if is_edit %}更新轮播图{% else %}创建轮播图{% endif %}</button>
+        <a href="{{ url_for('list_banners_web') }}" class="btn btn-secondary">取消</a>
     </form>
 </div>
 

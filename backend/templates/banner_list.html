@@ -9,7 +9,7 @@
 
 {% block content %}
 <div class="table-wrapper">
-    <table role="grid">
+    <table class="table table-striped">
         <thead>
             <tr>
                 <th>ID</th>
@@ -24,15 +24,21 @@
             {% for banner in banners %}
             <tr>
                 <td>{{ banner.id }}</td>
-                <td><img src="{{ banner.image_url }}" alt="Banner Image" style="max-width: 150px; max-height: 50px; object-fit: cover;"></td>
-                <td>{{ banner.link_url }}</td>
-                <td>{{ banner.sort_order }}</td>
-                <td>{% if banner.is_active %}激活{% else %}禁用{% endif %}</td>
                 <td>
-                    <div class="action-buttons">
-                        <a href="/admin/banners/edit/{{ banner.id }}" role="button" class="secondary outline">编辑</a>
-                        <form action="/admin/banners/delete/{{ banner.id }}" method="post">
-                            <button type="submit" onclick="return confirm('您确定要删除这个轮播图吗？')" class="destructive outline">删除</button>
+                    {% if banner.image_url %}
+                    <img src="{{ url_for('static', path=banner.image_url.split('/', 2)[-1]) }}" alt="Banner Image" class="img-fluid" style="max-width: 150px; max-height: 50px; object-fit: cover;">
+                    {% else %}
+                    No Image
+                    {% endif %}
+                </td>
+                <td><a href="{{ banner.link_url }}" target="_blank">{{ banner.link_url }}</a></td>
+                <td>{{ banner.sort_order }}</td>
+                <td><span class="badge bg-{% if banner.is_active %}success{% else %}secondary{% endif %}">{% if banner.is_active %}激活{% else %}禁用{% endif %}</span></td>
+                <td>
+                    <div class="btn-group" role="group">
+                        <a href="{{ url_for('edit_banner_form', banner_id=banner.id) }}" class="btn btn-sm btn-outline-primary">编辑</a>
+                        <form action="{{ url_for('delete_banner_web', banner_id=banner.id) }}" method="post" class="d-inline">
+                            <button type="submit" onclick="return confirm('您确定要删除这个轮播图吗？')" class="btn btn-sm btn-outline-danger">删除</button>
                         </form>
                     </div>
                 </td>
