@@ -1,16 +1,19 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Category Management</title>
-</head>
-<body>
-    <h1>Categories</h1>
-    <a href="/admin/category/add">Add New Category</a>
-    <table border="1">
+{% extends "base.html" %}
+
+{% block title %}分类管理{% endblock %}
+
+{% block sidebar %}
+    <h1>分类管理</h1>
+    <a href="/admin/categories/new" role="button" class="primary">添加新分类</a>
+{% endblock %}
+
+{% block content %}
+<div class="table-wrapper">
+    <table role="grid">
         <thead>
             <tr>
-                <th>分类号 (ID)</th>
-                <th>分类名</th>
+                <th>ID</th>
+                <th>分类名称</th>
                 <th>操作</th>
             </tr>
         </thead>
@@ -20,15 +23,16 @@
                 <td>{{ category.id }}</td>
                 <td>{{ category.name }}</td>
                 <td>
-                    <a href="/admin/category/edit/{{ category.id }}">编辑</a>
-                    <form action="/admin/category/delete/{{ category.id }}" method="post" style="display:inline;">
-                        <button type="submit" onclick="return confirm('你确定要删除吗？')">删除</button>
-                    </form>
+                    <div class="action-buttons">
+                        <a href="/admin/categories/edit/{{ category.id }}" role="button" class="secondary outline">编辑</a>
+                        <form action="/admin/categories/delete/{{ category.id }}" method="post">
+                            <button type="submit" onclick="return confirm('您确定要删除这个分类吗？')" class="destructive outline">删除</button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-    <a href="/admin">Back to Admin Home</a>
-</body>
-</html>
+</div>
+{% endblock %}

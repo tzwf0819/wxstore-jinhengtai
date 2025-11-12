@@ -25,7 +25,7 @@
         
         <!-- Unified Image Preview Box -->
         <img id="image-preview" 
-             src="{% if product and product.image_url %}{{ product.image_url }}{% endif %}" 
+             src="{% if product and product.image_url %}{{ request.scope.get('root_path', '') }}{{ product.image_url }}{% endif %}" 
              alt="Image Preview" 
              style="max-width: 150px; max-height: 150px; display: {% if product and product.image_url %}block{% else %}none{% endif %}; margin-bottom: 1rem; border-radius: var(--border-radius);">
         

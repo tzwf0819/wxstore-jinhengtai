@@ -2,13 +2,20 @@ import os
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 
 from app.api import api_router
 from app.web.admin import router as admin_web_router
 from app.api.endpoints import admin as admin_api_router
 
-# Create the FastAPI app instance
-app = FastAPI(title="Jinhengtai Mall API")
+# Load environment variables from .env file
+load_dotenv()
+
+# Get ROOT_PATH from environment, default to "" if not set
+ROOT_PATH = os.getenv("ROOT_PATH", "")
+
+# Create the FastAPI app instance with the root_path
+app = FastAPI(title="Jinhengtai Mall API", root_path=ROOT_PATH)
 
 # --- CORS Middleware ---
 app.add_middleware(
@@ -27,10 +34,6 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # --- API Routes ---
 app.include_router(api_router, prefix="/api/v1")
-
-# --- Web Admin Routes ---
-app.include_router(admin_web_router, tags=["admin-web"])
-app.include_router(admin_api_router.router, prefix="/admin/api", tags=["admin-api"])
 
 # --- Web Admin Routes ---
 app.include_router(admin_web_router, tags=["admin-web"])

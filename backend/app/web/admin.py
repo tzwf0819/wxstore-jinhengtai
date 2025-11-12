@@ -9,7 +9,7 @@ import pathlib
 
 from .. import models, schemas
 from ..api import deps
-from ..api.endpoints import products as api_products
+from ..api.endpoints import products as api_products, banners as api_banners, categories as api_categories, orders as api_orders, stock as api_stock
 
 router = APIRouter()
 
@@ -33,10 +33,7 @@ async def list_products_web(request: Request, db: Session = Depends(deps.get_db)
 @router.get("/admin/products/edit/{product_id}", response_class=HTMLResponse)
 async def edit_product_form(request: Request, product_id: int, db: Session = Depends(deps.get_db)):
     product = db.query(models.Product).filter(models.Product.id == product_id).first()
-    return templates.TemplateResponse(
-        "product_form.html", 
-        {"request": request, "product": product, "is_edit": True, "ROOT_PATH": os.getenv("ROOT_PATH", "")}
-    )
+    return templates.TemplateResponse("product_form.html", {"request": request, "product": product, "is_edit": True})
 
 @router.get("/admin/products/new", response_class=HTMLResponse)
 async def new_product_form(request: Request):
@@ -95,4 +92,131 @@ async def update_product_web(
     api_products.update_product(product_id=product_id, product_in=product_in, db=db)
     return RedirectResponse(url="/admin/products", status_code=303)
 
-# ... (The rest of the admin routes will be added in the next step)
+# --- Banner Management Routes ---
+
+@router.get("/admin/banners", response_class=HTMLResponse)
+async def list_banners_web(request: Request, db: Session = Depends(deps.get_db)):
+    banners_data = api_banners.read_banners(db=db)
+    return templates.TemplateResponse("banner_list.html", {"request": request, "banners": banners_data})
+
+@router.get("/admin/banners/new", response_class=HTMLResponse)
+async def new_banner_form(request: Request):
+    return templates.TemplateResponse("banner_form.html", {"request": request, "banner": None, "is_edit": False})
+
+@router.post("/admin/banners/new")
+async def create_banner_web(
+    request: Request,
+    db: Session = Depends(deps.get_db)
+):
+    form_data = await request.form()
+    banner_in = schemas.BannerCreate(
+        image_url=form_data.get("image_url"),
+        link_url=form_data.get("link_url"),
+        sort_order=int(form_data.get("sort_order", 1)),
+        is_active='is_active' in form_data,
+    )
+    api_banners.create_banner(db=db, banner_in=banner_in)
+    return RedirectResponse(url="/admin/banners", status_code=303)
+
+@router.get("/admin/banners/edit/{banner_id}", response_class=HTMLResponse)
+async def edit_banner_form(request: Request, banner_id: int, db: Session = Depends(deps.get_db)):
+    banner = db.query(models.Banner).filter(models.Banner.id == banner_id).first()
+    if not banner:
+        return HTMLResponse(status_code=404, content="Banner not found")
+    return templates.TemplateResponse("banner_form.html", {"request": request, "banner": banner, "is_edit": True})
+
+@router.post("/admin/banners/edit/{banner_id}")
+async def update_banner_web(
+    request: Request,
+    banner_id: int,
+    db: Session = Depends(deps.get_db)
+):
+    form_data = await request.form()
+    banner_in = schemas.BannerUpdate(
+        image_url=form_data.get("image_url"),
+        link_url=form_data.get("link_url"),
+        sort_order=int(form_data.get("sort_order")),
+        is_active='is_active' in form_data,
+    )
+    updated_banner = api_banners.update_banner(db=db, banner_id=banner_id, banner_in=banner_in)
+    if not updated_banner:
+        return HTMLResponse(status_code=404, content="Banner not found")
+    return RedirectResponse(url="/admin/banners", status_code=303)
+
+
+@router.post("/admin/banners/delete/{banner_id}")
+async def delete_banner_web(banner_id: int, db: Session = Depends(deps.get_db)):
+    api_banners.delete_banner(db=db, banner_id=banner_id)
+    return RedirectResponse(url="/admin/banners", status_code=303)
+
+
+# --- Category Management Routes ---
+
+@router.get("/admin/categories", response_class=HTMLResponse)
+async def list_categories_web(request: Request, db: Session = Depends(deps.get_db)):
+    categories_data = api_categories.read_categories(db=db)
+    return templates.TemplateResponse("category_list.html", {"request": request, "categories": categories_data})
+
+@router.get("/admin/categories/new", response_class=HTMLResponse)
+async def new_category_form(request: Request):
+    return templates.TemplateResponse("category_form.html", {"request": request, "category": None, "is_edit": False})
+
+@router.post("/admin/categories/new")
+async def create_category_web(
+    name: str = Form(...),
+    db: Session = Depends(deps.get_db)
+):
+    category_in = schemas.CategoryCreate(name=name)
+    api_categories.create_category(db=db, category_in=category_in)
+    return RedirectResponse(url="/admin/categories", status_code=303)
+
+@router.get("/admin/categories/edit/{category_id}", response_class=HTMLResponse)
+async def edit_category_form(request: Request, category_id: int, db: Session = Depends(deps.get_db)):
+    category = db.query(models.Category).filter(models.Category.id == category_id).first()
+    if not category:
+        return HTMLResponse(status_code=404, content="Category not found")
+    return templates.TemplateResponse("category_form.html", {"request": request, "category": category, "is_edit": True})
+
+@router.post("/admin/categories/edit/{category_id}")
+async def update_category_web(
+    category_id: int,
+    name: str = Form(...),
+    db: Session = Depends(deps.get_db)
+):
+    category_in = schemas.CategoryUpdate(name=name)
+    updated_category = api_categories.update_category(db=db, category_id=category_id, category_in=category_in)
+    if not updated_category:
+        return HTMLResponse(status_code=404, content="Category not found")
+    return RedirectResponse(url="/admin/categories", status_code=303)
+
+@router.post("/admin/categories/delete/{category_id}")
+async def delete_category_web(category_id: int, db: Session = Depends(deps.get_db)):
+    api_categories.delete_category(db=db, category_id=category_id)
+    return RedirectResponse(url="/admin/categories", status_code=303)
+
+
+# --- Order Management Routes (Read-Only) ---
+
+@router.get("/admin/orders", response_class=HTMLResponse)
+async def list_orders_web(request: Request, db: Session = Depends(deps.get_db)):
+    orders_data = api_orders.read_orders(db=db, skip=0, limit=100) # Fetch latest 100 orders
+    return templates.TemplateResponse("order_list.html", {"request": request, "orders": orders_data})
+
+@router.get("/admin/orders/{order_id}", response_class=HTMLResponse)
+async def view_order_web(request: Request, order_id: int, db: Session = Depends(deps.get_db)):
+    order = api_orders.read_order(db=db, order_id=order_id)
+    if not order:
+        return HTMLResponse(status_code=404, content="Order not found")
+    return templates.TemplateResponse("order_detail.html", {"request": request, "order": order})
+
+
+# --- Stock Management Routes (Read-Only) ---
+
+@router.get("/admin/stock", response_class=HTMLResponse)
+async def list_stock_movements_web(request: Request, db: Session = Depends(deps.get_db)):
+    stock_movements = api_stock.read_stock_movements(db=db, skip=0, limit=200) # Fetch latest 200 movements
+    return templates.TemplateResponse("stock_list.html", {"request": request, "movements": stock_movements})
+
+
+
+

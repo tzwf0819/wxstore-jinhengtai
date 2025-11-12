@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}订单详情 - {{ order.order_sn }}{% endblock %}
+
+{% block sidebar %}
+    <a href="/admin/orders" class="secondary outline">← 返回订单列表</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2 style="margin-bottom: 1rem;">订单详情</h2>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div><strong>订单号:</strong> {{ order.order_sn }}</div>
+        <div><strong>用户 ID:</strong> {{ order.user_id }}</div>
+        <div><strong>总价:</strong> ¥{{ "%.2f"|format(order.total_amount) }}</div>
+        <div><strong>状态:</strong> {{ order.status }}</div>
+        <div><strong>创建时间:</strong> {{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+        <div><strong>更新时间:</strong> {{ order.updated_at.strftime('%Y-%m-%d %H:%M') }}</div>
+    </div>
+    <h3 style="margin-top: 2rem;">订单商品</h3>
+    <table role="grid">
+        <thead>
+            <tr>
+                <th>商品 ID</th>
+                <th>商品名称</th>
+                <th>单价</th>
+                <th>数量</th>
+                <th>小计</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in order.items %}
+            <tr>
+                <td>{{ item.product_id }}</td>
+                <td>{{ item.product.name }}</td>
+                <td>¥{{ "%.2f"|format(item.price) }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>¥{{ "%.2f"|format(item.price * item.quantity) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

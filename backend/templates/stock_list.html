@@ -1,44 +1,39 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Movement Management</title>
-    <style>
-        body { font-family: sans-serif; margin: 2em; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .add-btn { margin-top: 20px; padding: 10px 15px; }
-    </style>
-</head>
-<body>
-    <h1>入库记录管理</h1>
-    <a href="/admin">返回主页</a>
-    <table>
+{% extends "base.html" %}
+
+{% block title %}库存记录{% endblock %}
+
+{% block sidebar %}
+    <h1>库存记录</h1>
+    <p>查看所有商品的库存变动历史。</p>
+{% endblock %}
+
+{% block content %}
+<div class="table-wrapper">
+    <table role="grid">
         <thead>
             <tr>
                 <th>ID</th>
+                <th>商品 ID</th>
                 <th>商品名称</th>
-                <th>数量</th>
+                <th>变动数量</th>
                 <th>类型</th>
-                <th>关联单号</th>
-                <th>创建时间</th>
+                <th>参考信息</th>
+                <th>时间</th>
             </tr>
         </thead>
         <tbody>
             {% for movement in movements %}
             <tr>
                 <td>{{ movement.id }}</td>
+                <td>{{ movement.product_id }}</td>
                 <td>{{ movement.product.name if movement.product else 'N/A' }}</td>
                 <td>{{ movement.quantity }}</td>
                 <td>{{ movement.movement_type }}</td>
                 <td>{{ movement.reference_id }}</td>
-                <td>{{ movement.created_at }}</td>
+                <td>{{ movement.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-    <a href="/admin/stock/new"><button class="add-btn">新建入库记录</button></a>
-</body>
-</html>
+</div>
+{% endblock %}
