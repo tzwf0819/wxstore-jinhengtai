@@ -8,7 +8,7 @@ from app.web.admin import router as admin_web_router
 from app.api.endpoints import admin as admin_api_router
 
 # Create the FastAPI app instance
-app = FastAPI(title="Jinhengtai Mall API")
+app = FastAPI(title="Jinhengtai Mall API", root_path="/jinhengtai")
 
 # --- CORS Middleware ---
 app.add_middleware(
