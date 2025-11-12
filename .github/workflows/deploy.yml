@@ -42,7 +42,7 @@ jobs:
 
             # 4. 下载最新的代码
             echo "Downloading latest source code from main branch..."
-            wget -qO latest.zip "https://github.com/${{ github.repository }}/archive/refs/heads/main.zip"
+            wget -qO latest.zip "https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}/archive/refs/heads/main.zip"
             unzip -q -o latest.zip
             # 从解压出的带版本号的目录中，将所有文件（包括隐藏文件）移动到当前目录
             EXTRACTED_DIR=$(unzip -Z1 latest.zip | head -1 | sed 's@/.*@@')
