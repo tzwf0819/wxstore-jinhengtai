@@ -14,7 +14,7 @@ def test_stock_in(test_client: TestClient, db_session: Session):
     db_session.commit()
 
     response = test_client.post(
-        "/api/v1/stock/in",
+        "/jinhengtai/api/v1/stock/in",
         json={"product_id": product.id, "quantity": 25, "reference_id": "PO-123"}
     )
     assert response.status_code == 200, response.text
@@ -22,7 +22,7 @@ def test_stock_in(test_client: TestClient, db_session: Session):
     assert data["quantity"] == 25
 
     # Verify total stock by using the list_products endpoint which calculates it
-    list_response = test_client.get("/api/v1/products/")
+    list_response = test_client.get("/jinhengtai/api/v1/products/")
     products_data = list_response.json()
     target_product = next((p for p in products_data if p["id"] == product.id), None)
     assert target_product["current_stock"] == 75
@@ -39,7 +39,7 @@ def test_stock_out_return(test_client: TestClient, db_session: Session):
     db_session.commit()
 
     response = test_client.post(
-        "/api/v1/stock/out-return",
+        "/jinhengtai/api/v1/stock/out-return",
         json={"product_id": product.id, "quantity": 30, "reference_id": "RMA-456"}
     )
     assert response.status_code == 200, response.text
@@ -47,7 +47,7 @@ def test_stock_out_return(test_client: TestClient, db_session: Session):
     assert data["quantity"] == 30
 
     # Verify total stock (100 - 40 + 30 = 90)
-    list_response = test_client.get("/api/v1/products/")
+    list_response = test_client.get("/jinhengtai/api/v1/products/")
     products_data = list_response.json()
     target_product = next((p for p in products_data if p["id"] == product.id), None)
     assert target_product["current_stock"] == 90
@@ -63,7 +63,7 @@ def test_stock_out_insufficient(test_client: TestClient, db_session: Session):
 
     # Try to perform a sale that exceeds current stock
     response = test_client.post(
-        "/api/v1/stock/out-return", # This endpoint name is misleading for a sale
+        "/jinhengtai/api/v1/stock/out-return", # This endpoint name is misleading for a sale
         json={"product_id": product.id, "quantity": 20} 
     )
     # The logic for stock checking on returns might be different or missing.
@@ -73,7 +73,7 @@ def test_stock_out_insufficient(test_client: TestClient, db_session: Session):
     assert response.status_code == 400 or response.status_code == 200
 
     # Verify stock has not changed unexpectedly
-    list_response = test_client.get("/api/v1/products/")
+    list_response = test_client.get("/jinhengtai/api/v1/products/")
     products_data = list_response.json()
     target_product = next((p for p in products_data if p["id"] == product.id), None)
     assert target_product["current_stock"] == 10

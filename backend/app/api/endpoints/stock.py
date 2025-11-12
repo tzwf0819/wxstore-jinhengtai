@@ -1,10 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from typing import List
 
 from ... import models, schemas
 from ...api import deps
 
 router = APIRouter()
+
+@router.get("/", response_model=List[schemas.StockMovementRead])
+def list_stock_movements(db: Session = Depends(deps.get_db), skip: int = 0, limit: int = 100):
+    movements = db.query(models.StockMovement).order_by(models.StockMovement.created_at.desc()).offset(skip).limit(limit).all()
+    return movements
 
 @router.post("/in", response_model=schemas.StockMovementRead)
 def stock_in(movement: schemas.StockMovementCreate, db: Session = Depends(deps.get_db)):
