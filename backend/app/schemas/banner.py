@@ -9,6 +9,9 @@ class BannerBase(BaseModel):
 class BannerCreate(BannerBase):
     pass
 
+class BannerUpdate(BannerBase):
+    pass
+
 class BannerRead(BannerBase):
     id: int
 
