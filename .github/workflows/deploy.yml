@@ -49,7 +49,8 @@ jobs:
                 sudo apt-get update -y > /dev/null
                 sudo apt-get install -y git
             elif command -v yum &> /dev/null; then
-                sudo yum install -y git
+                # 尝试安装 git，但如果失败则忽略错误，因为 git 很可能已安装
+    sudo yum install -y git || echo "yum install failed, proceeding with assumption that git is already installed."
             else
                 echo "Warning: Could not find apt-get or yum. Assuming git is already installed."
             fi
