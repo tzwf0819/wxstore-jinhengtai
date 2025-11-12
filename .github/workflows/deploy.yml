@@ -141,21 +141,11 @@ jobs:
               sudo apt-get install -y nginx
           fi
 
-          # Generate self-signed certificate for HTTPS
-          sudo mkdir -p /etc/nginx/ssl
-          sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-               -keyout /etc/nginx/ssl/nginx-selfsigned.key \
-               -out /etc/nginx/ssl/nginx-selfsigned.crt \
-               -subj "/C=US/ST=CA/L=SF/O=MyOrg/OU=MyDept/CN=yidasoftware.xyz"
-
           echo "Writing Nginx configuration..."
           sudo tee /etc/nginx/sites-available/backend_proxy > /dev/null <<'EOF'
           server {
-              listen 443 ssl;
+              listen 80;
               server_name _;
-
-              ssl_certificate /etc/nginx/ssl/nginx-selfsigned.crt;
-              ssl_certificate_key /etc/nginx/ssl/nginx-selfsigned.key;
 
               location /jinhengtai/ {
                   rewrite ^/jinhengtai/(.*)$ /$1 break;
