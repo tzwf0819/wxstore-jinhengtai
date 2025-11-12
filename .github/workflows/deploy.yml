@@ -15,9 +15,9 @@ jobs:
       - name: Deploy to Server via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
+          host: ${{ secrets.JINHENGTAI_HOST }}
+          username: ${{ secrets.JINHENGTAI_USERNAME }}
+          password: ${{ secrets.JINHENGTAI_PASSWORD }}
           script_stop: true
           command_timeout: 15m
           script: |
