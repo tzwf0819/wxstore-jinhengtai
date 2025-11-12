@@ -1,8 +1,0 @@
-.container {
-  padding-bottom: 50px; /* Space for the submit bar */
-}
-
-.address-section,
-.items-section {
-  margin-bottom: 10px;
-}

@@ -1,0 +1,47 @@
+'''<view class="container">
+  <view wx:if="{{cart.length > 0}}" class="cart-list">
+    <view wx:for="{{cart}}" wx:key="id" class="cart-item">
+      <image
+        class="select-icon"
+        src="{{item.selected ? '/static/images/checked.png' : '/static/images/unchecked.png'}}"
+        bindtap="onToggleSelect"
+        data-id="{{item.id}}"
+      />
+      <image class="product-image" src="{{item.image_url || '../../static/images/product_placeholder.png'}}" mode="aspectFill"/>
+      <view class="item-info">
+        <view class="product-name">{{item.name}}</view>
+        <view class="spec-row">
+          <view class="product-price">¥{{item.price}}</view>
+          <view class="quantity-control">
+            <view class="btn-quantity" bindtap="onQuantityChange" data-id="{{item.id}}" data-type="DECREMENT">-</view>
+            <view class="quantity">{{item.quantity}}</view>
+            <view class="btn-quantity" bindtap="onQuantityChange" data-id="{{item.id}}" data-type="INCREMENT">+</view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{cart.length === 0}}" class="empty-cart">
+    <image src="/static/images/empty_cart.png" mode="widthFix" class="empty-image"></image>
+    <view class="empty-text">购物车还是空的</view>
+    <button class="go-shopping-btn" bindtap="goShopping">去逛逛</button>
+  </view>
+
+  <!-- 底部结算栏 -->
+  <view class="checkout-bar" wx:if="{{cart.length > 0}}">
+    <view class="select-all-container" bindtap="onSelectAll">
+      <image
+        class="select-icon"
+        src="{{isAllSelected ? '/static/images/checked.png' : '/static/images/unchecked.png'}}"
+      />
+      <text>全选</text>
+    </view>
+    <view class="total-price-container">
+      <text>合计：</text>
+      <text class="total-price">¥{{totalPrice}}</text>
+    </view>
+    <button class="checkout-btn" bindtap="onCheckout">结算</button>
+  </view>
+</view>
+''

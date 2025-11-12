@@ -1,64 +1,77 @@
 .category-container {
   display: flex;
-  height: 100vh; /* Full viewport height */
+  height: 100vh;
+  background-color: #f5f5f5;
 }
 
-.sidebar {
+.category-nav {
   width: 200rpx;
-  background-color: #f5f5f5;
+  background-color: #fff;
   height: 100%;
 }
 
-.sidebar-item {
+.nav-item {
   padding: 30rpx 20rpx;
   text-align: center;
   font-size: 28rpx;
   color: #333;
-  border-bottom: 1rpx solid #e0e0e0;
-  position: relative;
+  border-left: 6rpx solid transparent;
 }
 
-.sidebar-item.active {
-  background-color: #fff;
-  color: #6A5ACD; /* Your theme color */
+.nav-item.active {
+  color: #ff5722;
+  background-color: #f5f5f5;
+  border-left-color: #ff5722;
   font-weight: bold;
 }
 
-/* The little indicator bar on the left */
-.sidebar-item.active::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 8rpx;
-  height: 40rpx;
-  background-color: #6A5ACD; /* Your theme color */
-}
-
-.content {
+.product-list-container {
   flex: 1;
   height: 100%;
-  padding: 20rpx;
-  box-sizing: border-box;
+  padding: 10rpx;
 }
 
 .product-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 20rpx;
+  justify-content: space-between;
 }
 
-/* Since product-card is a custom component, we need to ensure it fits the grid */
-.product-grid > product-card {
-  width: calc(50% - 10rpx);
+.product-item {
+  width: 49%;
+  background-color: #fff;
+  border-radius: 8rpx;
+  overflow: hidden;
+  margin-bottom: 10rpx;
 }
 
-.empty-state {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 50vh;
+.product-image {
+  width: 100%;
+  height: 200rpx;
+  background-color: #f4f4f4;
+}
+
+.product-info {
+  padding: 15rpx;
+}
+
+.product-name {
+  font-size: 24rpx;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.product-price {
+  font-size: 26rpx;
+  color: #ff5722;
+  margin-top: 10rpx;
+}
+
+.loading-tip, .empty-tip {
+  text-align: center;
   color: #999;
-  font-size: 28rpx;
+  padding: 50rpx 0;
+  width: 100%;
 }

@@ -29,6 +29,8 @@ class Settings(BaseSettings):
     sql_server_user: str
     sql_server_password: str
     sql_server_database: str
+    sql_server_encrypt: bool = False
+    sql_server_trust_server_certificate: bool = True
 
     @computed_field
     @property
@@ -36,11 +38,14 @@ class Settings(BaseSettings):
         # 对密码进行URL编码，以处理特殊字符（如'@'）
         encoded_password = quote_plus(self.sql_server_password)
         driver = "ODBC Driver 18 for SQL Server".replace(' ', '+')
+        
+        encrypt_param = 'yes' if self.sql_server_encrypt else 'no'
+        trust_cert_param = 'yes' if self.sql_server_trust_server_certificate else 'no'
 
         return (
             f"mssql+pyodbc://{self.sql_server_user}:{encoded_password}@"
             f"{self.sql_server_host}:{self.sql_server_port}/{self.sql_server_database}?"
-            f"driver={driver}&TrustServerCertificate=yes"
+            f"driver={driver}&Encrypt={encrypt_param}&TrustServerCertificate={trust_cert_param}"
         )
 
 @lru_cache

@@ -1,54 +1,57 @@
-import { getCategories, getProducts } from '../../services/product';
-import { API_BASE_URL } from '../../utils/api';
+
+import { getCategories, getProducts } from '../../services/api';
 
 Page({
   data: {
     categories: [],
-    allProducts: [],
-    activeCategory: null,
-    filteredProducts: []
+    products: [],
+    activeCategoryId: null,
+    loading: false,
   },
 
-  onLoad() {
-    this.loadData();
+  onLoad: function (options) {
+    this.loadCategories();
   },
 
-  async loadData() {
-    wx.showLoading({ title: '加载中...' });
+  loadCategories: async function () {
     try {
-      const [categories, allProducts] = await Promise.all([
-        getCategories(),
-        getProducts({ page_size: 200 })
-      ]);
-
-      const serverBaseUrl = 'https://www.yidasoftware.xyz/jinhengtai';
-      const formattedProducts = allProducts.map(p => ({ ...p, image_url: p.image_url && (p.image_url.startsWith('http') ? p.image_url : serverBaseUrl + p.image_url) }));
-
-      if (categories.length > 0) {
-        const activeCategory = categories[0];
-        this.setData({
-          categories,
-          allProducts: formattedProducts,
-          activeCategory,
-          filteredProducts: formattedProducts.filter(p => p.category === activeCategory.name)
-        });
+      const categories = await getCategories();
+      this.setData({ categories: categories || [] });
+      if (categories && categories.length > 0) {
+        this.onCategoryClick({ currentTarget: { dataset: { id: categories[0].id } } });
       }
     } catch (error) {
-      console.error('Failed to load data', error);
-    } finally {
-      wx.hideLoading();
+      console.error("Failed to load categories:", error);
+      wx.showToast({ title: '分类加载失败', icon: 'none' });
     }
   },
 
-  switchCategory(e) {
-    const categoryId = e.currentTarget.dataset.categoryId;
-    const newActiveCategory = this.data.categories.find(cat => cat.id === categoryId);
-
-    if (newActiveCategory && newActiveCategory.id !== this.data.activeCategory.id) {
-      this.setData({
-        activeCategory: newActiveCategory,
-        filteredProducts: this.data.allProducts.filter(p => p.category === newActiveCategory.name)
-      });
+  onCategoryClick: function (e) {
+    const id = e.currentTarget.dataset.id;
+    if (this.data.activeCategoryId === id) {
+      return;
     }
+    this.setData({ activeCategoryId: id, products: [] });
+    this.loadProducts(id);
+  },
+
+  loadProducts: async function (categoryId) {
+    this.setData({ loading: true });
+    try {
+      const products = await getProducts({ category: categoryId, page_size: 50 });
+      this.setData({ products: products || [] });
+    } catch (error) {
+      console.error("Failed to load products:", error);
+      wx.showToast({ title: '商品加载失败', icon: 'none' });
+    } finally {
+      this.setData({ loading: false });
+    }
+  },
+
+  goToProductDetail: function(e) {
+    const { id } = e.currentTarget.dataset;
+    wx.navigateTo({
+      url: `/pages/product/detail/detail?id=${id}`
+    });
   }
 });

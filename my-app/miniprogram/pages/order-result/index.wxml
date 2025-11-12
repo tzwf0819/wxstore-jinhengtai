@@ -1,0 +1,10 @@
+'''<view class="container">
+  <image class="result-icon" src="{{success ? '/static/images/success.png' : '/static/images/fail.png'}}"></image>
+  <view class="result-text">{{message}}</view>
+  
+  <view class="btn-area">
+    <button class="btn" bindtap="goToHome">返回首页</button>
+    <button wx:if="{{success}}" class="btn primary" bindtap="viewOrder">查看订单</button>
+  </view>
+</view>
+''

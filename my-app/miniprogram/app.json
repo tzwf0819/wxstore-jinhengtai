@@ -1,69 +1,53 @@
+
 {
   "pages": [
     "pages/home/home",
+    "pages/category/index",
+    "pages/cart/index",
+    "pages/my/index",
     "pages/product/detail/detail",
-    "pages/mine/mine",
-    "pages/cart/cart",
-    "pages/checkout/checkout",
-    "pages/order/list/index",
-    "pages/order/detail/index",
-    "pages/category/index"
+    "pages/order-confirm/index",
+    "pages/order-result/index",
+    "pages/orders/index"
   ],
   "window": {
     "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#6A5ACD",
-    "navigationBarTitleText": "小程序+云开发空白项目",
-    "navigationBarTextStyle": "white"
+    "navigationBarBackgroundColor": "#fff",
+    "navigationBarTitleText": "锦亨泰商城",
+    "navigationBarTextStyle": "black"
   },
   "tabBar": {
-    "color": "#999999",
-    "selectedColor": "#6A5ACD",
-    "backgroundColor": "#ffffff",
+    "color": "#666",
+    "selectedColor": "#5677fc",
+    "backgroundColor": "#fff",
+    "borderStyle": "black",
     "list": [
       {
         "pagePath": "pages/home/home",
         "text": "首页",
-        "iconPath": "images/home.png",
-        "selectedIconPath": "images/home-active.png"
+        "iconPath": "static/images/tab-bar/home.png",
+        "selectedIconPath": "static/images/tab-bar/home-active.png"
       },
       {
         "pagePath": "pages/category/index",
         "text": "分类",
-        "iconPath": "images/category.png",
-        "selectedIconPath": "images/category-active.png"
+        "iconPath": "static/images/tab-bar/category.png",
+        "selectedIconPath": "static/images/tab-bar/category-active.png"
       },
       {
-        "pagePath": "pages/cart/cart",
+        "pagePath": "pages/cart/index",
         "text": "购物车",
-        "iconPath": "images/cart.png",
-        "selectedIconPath": "images/cart-active.png"
+        "iconPath": "static/images/tab-bar/cart.png",
+        "selectedIconPath": "static/images/tab-bar/cart-active.png"
       },
       {
-        "pagePath": "pages/mine/mine",
+        "pagePath": "pages/my/index",
         "text": "我的",
-        "iconPath": "images/user.png",
-        "selectedIconPath": "images/user-active.png"
+        "iconPath": "static/images/tab-bar/my.png",
+        "selectedIconPath": "static/images/tab-bar/my-active.png"
       }
     ]
   },
-  "sitemapLocation": "sitemap.json",
-  "lazyCodeLoading": "requiredComponents",
-  "usingComponents": {
-    "van-button": "@vant/weapp/button/index",
-    "van-image": "@vant/weapp/image/index",
-    "van-card": "@vant/weapp/card/index",
-    "van-tag": "@vant/weapp/tag/index",
-    "van-icon": "@vant/weapp/icon/index",
-    "van-goods-action": "@vant/weapp/goods-action/index",
-    "van-goods-action-icon": "@vant/weapp/goods-action-icon/index",
-    "van-goods-action-button": "@vant/weapp/goods-action-button/index",
-    "van-stepper": "@vant/weapp/stepper/index",
-    "van-tab": "@vant/weapp/tab/index",
-    "van-tabs": "@vant/weapp/tabs/index",
-    "van-steps": "@vant/weapp/steps/index",
-    "van-empty": "@vant/weapp/empty/index",
-    "van-dialog": "@vant/weapp/dialog/index",
-    "van-cell": "@vant/weapp/cell/index",
-    "van-cell-group": "@vant/weapp/cell-group/index"
-  }
-} 
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

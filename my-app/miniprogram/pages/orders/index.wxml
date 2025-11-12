@@ -1,0 +1,7 @@
+'''<!--pages/orders/index.wxml-->
+<view class="container">
+  <view class="empty-tip">
+    暂无订单记录
+  </view>
+</view>
+''

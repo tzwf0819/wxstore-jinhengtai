@@ -1,83 +1,55 @@
-import { getProductDetail } from '../../../services/product';
+
+import { getProductDetail } from '../../../services/api';
+const app = getApp();
 
 Page({
   data: {
     product: null,
-    activeTab: 0,
-    quantity: 1, // Add quantity to data
+    loading: true
   },
 
-  onLoad(options) {
-    const productId = options.id;
-    if (productId) {
-      this.loadProductDetail(productId);
+  onLoad: function (options) {
+    if (options.id) {
+      this.loadProductDetail(options.id);
+    } else {
+      wx.showToast({ title: '商品不存在', icon: 'none' });
+      this.setData({ loading: false });
     }
   },
 
-  async loadProductDetail(productId) {
-    wx.showLoading({ title: '加载中...' });
+  loadProductDetail: async function (id) {
+    this.setData({ loading: true });
     try {
-      const product = await getProductDetail(productId);
-      if (product) {
-        const serverBaseUrl = 'https://www.yidasoftware.xyz/jinhengtai';
-        product.image_url = product.image_url && (product.image_url.startsWith('http') ? product.image_url : serverBaseUrl + product.image_url);
-        this.setData({ product });
-      } else {
-        wx.showToast({
-          title: '商品不存在',
-          icon: 'none'
-        });
-      }
+      const product = await getProductDetail(id);
+      this.setData({ product: product, loading: false });
     } catch (error) {
-      console.error('Failed to load product detail', error);
-      wx.showToast({
-        title: '加载失败',
-        icon: 'none'
-      });
-    } finally {
-      wx.hideLoading();
+      console.error("Failed to load product detail:", error);
+      wx.showToast({ title: '商品加载失败', icon: 'none' });
+      this.setData({ loading: false });
     }
   },
 
-  onTabChange(event) {
-    this.setData({ activeTab: event.detail.name });
-  },
-
-  onQuantityChange(event) {
-    this.setData({ quantity: event.detail });
-  },
-
-  onClickIcon() {
-    wx.switchTab({
-      url: '/pages/cart/cart'
+  onAddToCart: function () {
+    if (!this.data.product) return;
+    app.addToCart(this.data.product);
+    wx.showToast({
+      title: '已添加到购物车',
+      icon: 'success'
     });
   },
 
-  addToCart() {
-    if (this.data.product) {
-      const cart = wx.getStorageSync('cart') || [];
-      const existingItem = cart.find(item => item.id === this.data.product.id);
-
-      if (existingItem) {
-        existingItem.quantity += this.data.quantity;
-      } else {
-        cart.push({ ...this.data.product, quantity: this.data.quantity });
-      }
-
-      wx.setStorageSync('cart', cart);
-      wx.showToast({
-        title: '已加入购物车',
-        icon: 'success'
-      });
-    }
+  onBuyNow: function() {
+    if (!this.data.product) return;
+    // 为了演示流程，直接将当前商品加入购物车并跳转到订单确认页
+    app.addToCart(this.data.product);
+    wx.navigateTo({
+      url: '/pages/order-confirm/index'
+    });
   },
 
-  buyNow() {
-    if (this.data.product) {
-        const productToBuy = [{ ...this.data.product, quantity: this.data.quantity }];
-        wx.navigateTo({ 
-            url: `/pages/checkout/checkout?orderItems=${encodeURIComponent(JSON.stringify(productToBuy))}`
-        });
-    }
+  goToCart: function() {
+    wx.switchTab({
+      url: '/pages/cart/index'
+    });
   }
 });

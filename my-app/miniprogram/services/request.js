@@ -1,61 +1,39 @@
-/**
- * 通用请求封装
- */
-
-const defaultHeaders = {
-  'Content-Type': 'application/json'
-};
-
-const getAppInstance = () => {
-  try {
-    return getApp();
-  } catch (error) {
-    console.error('获取全局应用实例失败', error);
-    return null;
-  }
-};
+import { API_BASE_URL } from '../config';
 
 export const request = ({ url, method = 'GET', data = {}, headers = {} }) => {
-  const app = getAppInstance();
-  const baseUrl = app?.globalData?.apiBaseUrl;
+  const baseUrl = API_BASE_URL;
+
   if (!baseUrl) {
-    console.error('后端地址未配置');
-    return Promise.reject(new Error('后端地址未配置'));
+    console.error('API base URL not configured');
+    return Promise.reject(new Error('API base URL not configured'));
   }
 
   const requestHeaders = {
-    ...defaultHeaders,
+    'Content-Type': 'application/json',
     ...headers
   };
 
   return new Promise((resolve, reject) => {
     wx.request({
-      url: `${baseUrl}${url}`,
+      url: baseUrl + url,
       method,
       data,
       header: requestHeaders,
       success: (res) => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           resolve(res.data);
-        } else if (res.statusCode === 401) {
-          app?.setAuthToken?.(null);
-          app?.setUserProfile?.(null);
-          wx.showToast({
-            title: '请重新登录',
-            icon: 'none'
-          });
-          reject(new Error('未授权'));
         } else {
-          console.error('请求失败', res);
+          console.error('Request failed:', res);
+          const errorMessage = res.data?.detail || res.data?.message || '请求失败';
           wx.showToast({
-            title: res.data?.message || '请求失败',
+            title: errorMessage,
             icon: 'none'
           });
-          reject(new Error(res.data?.message || '请求失败'));
+          reject(new Error(errorMessage));
         }
       },
       fail: (error) => {
-        console.error('网络请求失败', error);
+        console.error('Network request failed:', error);
         wx.showToast({
           title: '网络异常，请稍后重试',
           icon: 'none'

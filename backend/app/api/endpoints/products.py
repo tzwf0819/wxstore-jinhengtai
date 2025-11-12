@@ -57,7 +57,7 @@ def read_product(
 @router.put("/{product_id}", response_model=schemas.ProductRead)
 def update_product(
     product_id: int,
-    product_in: schemas.ProductCreate, # Using Create schema is fine here
+    product_in: schemas.ProductUpdate, # Use ProductUpdate schema
     db: Session = Depends(deps.get_db),
 ):
     db_product = db.get(models.Product, product_id)

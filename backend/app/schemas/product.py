@@ -15,6 +15,11 @@ class ProductCreate(ProductBase):
     pass
 
 
+class ProductUpdate(ProductBase):
+    stock_quantity: int | None = None  # Make stock_quantity optional for updates
+
+
+
 class ProductRead(ProductBase):
     id: int
     current_stock: int = 0

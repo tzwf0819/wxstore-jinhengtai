@@ -1,0 +1,17 @@
+'''<view class="container">
+  <!-- 用户信息 -->
+  <view class="user-profile">
+    <image class="avatar" src="{{userInfo.avatarUrl}}"></image>
+    <view class="nickname">{{userInfo.nickName}}</view>
+  </view>
+
+  <!-- 菜单列表 -->
+  <view class="menu-list">
+    <view wx:for="{{menuItems}}" wx:key="text" class="menu-item" bindtap="onMenuItemClick" data-item="{{item}}">
+      <image class="menu-icon" src="{{item.icon}}"></image>
+      <text class="menu-text">{{item.text}}</text>
+      <image class="arrow-right" src="/static/images/arrow_right.png"></image>
+    </view>
+  </view>
+</view>
+''

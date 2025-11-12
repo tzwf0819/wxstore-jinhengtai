@@ -1,70 +1,134 @@
 .container {
-  padding-bottom: 50px; /* Space for the goods action bar */
+  padding-bottom: 120rpx; /* 为底部操作栏留出空间 */
+  background-color: #f5f5f5;
+}
+
+.product-image {
+  width: 100%;
+  height: 750rpx;
+  background-color: #fff;
 }
 
 .product-info {
-  padding: 16px;
   background-color: #fff;
+  padding: 20rpx;
+  margin-top: -10rpx; /* 轻微上移，覆盖图片底部 */
 }
 
-.price-stock {
+.price-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 15rpx;
 }
 
-.product-price {
-  font-size: 24px;
-  color: #ee0a24;
+.price {
+  font-size: 48rpx;
+  color: #ff5722;
   font-weight: bold;
 }
 
-.product-stock {
-  font-size: 14px;
+.stock {
+  font-size: 24rpx;
   color: #999;
 }
 
-.product-name {
-  font-size: 18px;
+.name {
+  font-size: 34rpx;
   font-weight: bold;
-  margin-bottom: 8px;
+  color: #333;
 }
 
-.product-description {
-  font-size: 14px;
+.detail-section {
+  background-color: #fff;
+  margin-top: 20rpx;
+  padding: 20rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  padding-bottom: 20rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.description {
+  padding-top: 20rpx;
+  font-size: 28rpx;
   color: #666;
   line-height: 1.6;
-  margin-bottom: 16px;
 }
 
-.quantity-selector {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
-  border-top: 1px solid #f0f0f0;
-  margin-top: 10px;
+.loading-tip, .empty-tip {
+  text-align: center;
+  color: #999;
+  padding: 100rpx 0;
 }
 
-.quantity-selector text {
-  font-size: 14px;
-  color: #333;
-}
-
-.detail-content,
-.specs-content {
-  padding: 16px;
-  background-color: #fff;
-  margin-top: 10px;
-  font-size: 14px;
-  color: #333;
-  line-height: 1.8;
-}
-
-.van-goods-action {
+/* 底部操作栏 */
+.bottom-bar {
   position: fixed;
   bottom: 0;
   left: 0;
-  width: 100%;
+  right: 0;
+  height: 100rpx;
+  background-color: #fff;
+  display: flex;
+  align-items: center;
+  border-top: 1rpx solid #eee;
+}
+
+.btn-group {
+  display: flex;
+  align-items: center;
+}
+
+.bar-btn {
+  background: none;
+  border: none;
+  padding: 0 20rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 20rpx;
+  color: #666;
+  line-height: 1.2;
+}
+.bar-btn::after {
+  border: none;
+}
+
+.bar-btn image {
+  width: 40rpx;
+  height: 40rpx;
+  margin-bottom: 5rpx;
+}
+
+.action-group {
+  flex: 1;
+  display: flex;
+  height: 100%;
+}
+
+.action-btn {
+  flex: 1;
+  border: none;
+  border-radius: 0;
+  color: #fff;
+  font-size: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.action-btn::after {
+  border: none;
+}
+
+.add-to-cart {
+  background-color: #ff9800;
+}
+
+.buy-now {
+  background-color: #ff5722;
 }

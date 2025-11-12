@@ -1,0 +1,39 @@
+'''<view class="container">
+  <!-- 收货信息 -->
+  <view class="section address-section">
+    <view class="section-title">收货信息</view>
+    <view class="info-item">
+      <text class="label">收货地址</text>
+      <input class="input" value="{{shippingAddress}}" placeholder="请输入收货地址" bindinput="onAddressInput"/>
+    </view>
+    <view class="info-item">
+      <text class="label">联系电话</text>
+      <input class="input" type="number" value="{{shippingContact}}" placeholder="请输入联系电话" bindinput="onContactInput"/>
+    </view>
+  </view>
+
+  <!-- 商品列表 -->
+  <view class="section product-section">
+    <view class="section-title">商品清单</view>
+    <view wx:for="{{orderItems}}" wx:key="id" class="order-item">
+      <image class="product-image" src="{{item.image_url || '../../static/images/product_placeholder.png'}}" mode="aspectFill"/>
+      <view class="item-info">
+        <view class="name">{{item.name}}</view>
+        <view class="price-quantity">
+          <text class="price">¥{{item.price}}</text>
+          <text class="quantity">x{{item.quantity}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部提交栏 -->
+  <view class="submit-bar">
+    <view class="total-price-container">
+      <text>合计：</text>
+      <text class="total-price">¥{{totalPrice}}</text>
+    </view>
+    <button class="submit-btn" bindtap="onSubmitOrder" loading="{{submitting}}">提交订单</button>
+  </view>
+</view>
+''

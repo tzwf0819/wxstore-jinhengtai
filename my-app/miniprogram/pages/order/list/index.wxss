@@ -1,7 +1,0 @@
-.empty-orders {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 200px;
-  color: #999;
-}

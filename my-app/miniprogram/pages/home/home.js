@@ -1,38 +1,49 @@
-import { getBanners, getHotProducts } from '../../services/product';
+
+import { getBanners, getHotProducts } from '../../services/api';
 
 Page({
   data: {
     banners: [],
-    products: []
+    products: [],
+    loading: true,
   },
 
-  onLoad: function () {
+  onLoad: function (options) {
     this.loadHomePageData();
   },
 
-  async loadHomePageData() {
+  onPullDownRefresh: function () {
+    this.loadHomePageData();
+  },
+
+  loadHomePageData: async function () {
+    this.setData({ loading: true });
     wx.showLoading({ title: '加载中...' });
     try {
-      const [banners, products] = await Promise.all([
+      const [bannersRes, productsRes] = await Promise.all([
         getBanners(),
-        getHotProducts(10) // Fetch 10 hot products
+        getHotProducts(10) // 获取10个热门商品
       ]);
 
-      // Add full URL to images
-      const serverBaseUrl = 'https://www.yidasoftware.xyz/jinhengtai';
-      const formattedBanners = banners.map(b => ({ ...b, image_url: b.image_url && (b.image_url.startsWith('http') ? b.image_url : serverBaseUrl + b.image_url) }));
-      const formattedProducts = products.map(p => ({ ...p, image_url: p.image_url && (p.image_url.startsWith('http') ? p.image_url : serverBaseUrl + p.image_url) }));
-
       this.setData({
-        banners: formattedBanners,
-        products: formattedProducts
+        banners: bannersRes || [],
+        products: productsRes || []
       });
 
     } catch (error) {
       console.error("Failed to load home page data:", error);
-      wx.showToast({ title: '加载失败', icon: 'none' });
+      wx.showToast({ title: '数据加载失败', icon: 'none' });
     } finally {
+      this.setData({ loading: false });
       wx.hideLoading();
+      wx.stopPullDownRefresh();
     }
+  },
+
+  goToProductDetail: function(e) {
+    const { id } = e.currentTarget.dataset;
+    wx.navigateTo({
+      url: `/pages/product/detail/detail?id=${id}`
+    });
   }
 });

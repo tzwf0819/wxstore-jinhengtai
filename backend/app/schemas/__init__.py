@@ -2,7 +2,7 @@
 from .banner import BannerRead, BannerCreate
 from .category import CategoryRead
 from .order import OrderRead, OrderCreate, OrderItemRead, OrderItemCreate
-from .product import ProductRead, ProductCreate
+from .product import ProductRead, ProductCreate, ProductUpdate
 from .stock import StockMovementCreate, StockMovementRead
 
 __all__ = [
@@ -15,6 +15,7 @@ __all__ = [
     "OrderItemCreate",
     "ProductRead",
     "ProductCreate",
+    "ProductUpdate",
     "StockMovementCreate",
     "StockMovementRead",
 ]

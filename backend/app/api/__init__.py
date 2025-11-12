@@ -10,6 +10,6 @@ api_router.include_router(banners.router, prefix="/banners", tags=["Banners"])
 api_router.include_router(categories.router, prefix="/categories", tags=["Categories"])
 api_router.include_router(orders.router, prefix="/orders", tags=["Orders"])
 api_router.include_router(products.router, prefix="/products", tags=["Products"])
-api_router.include_router(uploads.router, prefix="/uploads", tags=["Uploads"]) # Add uploads router
+api_router.include_router(uploads.router, prefix="/upload", tags=["Uploads"]) # Add uploads router
 api_router.include_router(stock.router, prefix="/stock", tags=["Stock"])
 api_router.include_router(admin.router, prefix="/admin", tags=["Admin"])

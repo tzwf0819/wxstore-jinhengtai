@@ -7,7 +7,7 @@ def test_upload_file(test_client: TestClient):
     file_like_object = io.BytesIO(file_content)
 
     response = test_client.post(
-        "/api/v1/uploads/",  # Corrected endpoint
+        "/api/v1/upload/",  # Corrected endpoint
         files={"file": ("test_upload.txt", file_like_object, "text/plain")}
     )
 
