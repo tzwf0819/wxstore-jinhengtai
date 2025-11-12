@@ -21,7 +21,7 @@ Page({
         getProducts({ page_size: 200 })
       ]);
 
-      const serverBaseUrl = 'http://192.168.1.242:8000';
+      const serverBaseUrl = 'https://www.yidasoftware.xyz/jinhengtai';
       const formattedProducts = allProducts.map(p => ({ ...p, image_url: p.image_url && (p.image_url.startsWith('http') ? p.image_url : serverBaseUrl + p.image_url) }));
 
       if (categories.length > 0) {

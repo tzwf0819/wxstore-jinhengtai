@@ -1,6 +1,6 @@
 import request from '../utils/request';
 
-const API_BASE_URL = 'http://192.168.1.242:8000/api/v1'; // Make sure this matches your backend URL
+const API_BASE_URL = 'https://www.yidasoftware.xyz/jinhengtai/api/v1'; // Make sure this matches your backend URL
 
 export function createOrder(data) {
   return request(`${API_BASE_URL}/orders/`, {

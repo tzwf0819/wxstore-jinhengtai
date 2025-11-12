@@ -19,7 +19,7 @@ Page({
     try {
       const product = await getProductDetail(productId);
       if (product) {
-        const serverBaseUrl = 'http://192.168.1.242:8000';
+        const serverBaseUrl = 'https://www.yidasoftware.xyz/jinhengtai';
         product.image_url = product.image_url && (product.image_url.startsWith('http') ? product.image_url : serverBaseUrl + product.image_url);
         this.setData({ product });
       } else {

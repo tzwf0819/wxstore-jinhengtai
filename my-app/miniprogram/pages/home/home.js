@@ -20,7 +20,7 @@ Page({
       ]);
 
       // Add full URL to images
-      const serverBaseUrl = 'http://192.168.1.242:8000';
+      const serverBaseUrl = 'https://www.yidasoftware.xyz/jinhengtai';
       const formattedBanners = banners.map(b => ({ ...b, image_url: b.image_url && (b.image_url.startsWith('http') ? b.image_url : serverBaseUrl + b.image_url) }));
       const formattedProducts = products.map(p => ({ ...p, image_url: p.image_url && (p.image_url.startsWith('http') ? p.image_url : serverBaseUrl + p.image_url) }));
 
