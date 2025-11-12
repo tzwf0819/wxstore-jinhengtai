@@ -9,13 +9,15 @@ export const request = ({ url, method = 'GET', data = {}, headers = {} }) => {
   }
 
   // Create a robust final URL by ensuring there is exactly one slash between parts.
+  console.log('Base URL:', baseUrl); // 添加调试日志
   const finalUrl = baseUrl.replace(/\/$/, '') + '/' + url.replace(/^\//, '');
+  console.log('Final URL:', finalUrl); // 添加调试日志
 
   const requestHeaders = {
     'Content-Type': 'application/json',
     ...headers
   };
-
+  console.log('Final URL:', finalUrl);
   return new Promise((resolve, reject) => {
     wx.request({
       url: finalUrl,

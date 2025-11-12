@@ -18,6 +18,7 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 app.include_router(api_router, prefix="/api/v1")
 app.include_router(api_router, prefix="/jinhengtai/api/v1")
 app.include_router(api_router, prefix="/api/v1/v1")
+app.include_router(api_router, prefix="/api")
 
 # --- Web Admin Routes ---
 app.include_router(admin_web_router, tags=["admin-web"])
