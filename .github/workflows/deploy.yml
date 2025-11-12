@@ -96,7 +96,7 @@ jobs:
           # We also remove the old venv directory to ensure a clean environment.
           echo "Recreating Python virtual environment with a modern Python version..."
           sudo rm -rf "${VENV_DIR}"
-          sudo python3.8 -m venv "${VENV_DIR}"
+          sudo python3.11 -m venv "${VENV_DIR}"
 
           echo "Installing Python dependencies..."
           sudo "${VENV_DIR}/bin/pip" install --upgrade pip
