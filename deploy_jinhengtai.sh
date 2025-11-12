@@ -7,7 +7,7 @@ SERVICE_NAME="jinhengtai.service"
 # 后端代码所在的目录 (相对于项目根目录)
 BACKEND_DIR="backend"
 # 为此应用分配一个独立的端口
-APP_PORT=8001
+APP_PORT=8819
 # Python 虚拟环境的名称
 VENV_NAME="venv"
 
