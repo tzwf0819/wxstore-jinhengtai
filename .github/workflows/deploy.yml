@@ -118,7 +118,7 @@ jobs:
 
           [Service]
           WorkingDirectory=${BACKEND_DIR}
-          ExecStart=${VENV_DIR}/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --root-path /jinhengtai
+          ExecStart=${VENV_DIR}/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
           Restart=always
           User=root
 

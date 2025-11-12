@@ -6,7 +6,7 @@ from app.api import api_router
 from app.web.admin import router as admin_web_router
 from app.api.endpoints import admin as admin_api_router
 
-app = FastAPI(title="Jinhengtai Mall API", root_path="/jinhengtai")
+app = FastAPI(title="Jinhengtai Mall API")
 
 # --- Static files and Templates ---
 # Get the absolute path to the directory containing main.py
@@ -15,8 +15,12 @@ static_dir = os.path.join(current_dir, "static")
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # --- API Routes ---
-API_V1_PREFIX = "/api/v1"
-app.include_router(api_router, prefix=API_V1_PREFIX)
+# The root path is handled by the reverse proxy (Nginx)
+# and the --root-path uvicorn argument.
+api_v1_router = APIRouter()
+api_v1_router.include_router(api_router, prefix="/api/v1")
+
+app.include_router(api_v1_router)
 
 # --- Web Admin Routes ---
 app.include_router(admin_web_router, tags=["admin-web"])
