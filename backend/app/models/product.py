@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, Float, Integer, func, ForeignKey
+from sqlalchemy import Column, DateTime, Float, Integer, func, ForeignKey, Numeric
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.mssql import NVARCHAR
 
@@ -11,7 +11,7 @@ class Product(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(NVARCHAR(255), index=True)
     description = Column(NVARCHAR)
-    price = Column(Float)
+    price = Column(Numeric(10, 2), nullable=False)
     stock_quantity = Column(Integer, default=0, nullable=False)
     sales = Column(Integer, default=0, nullable=False)
     image_url = Column(NVARCHAR(255), nullable=True)

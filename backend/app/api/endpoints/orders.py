@@ -22,11 +22,18 @@ def create_order(
     # First, validate all products and calculate total amount
     for item_in in order_in.items:
         product = db.get(models.Product, item_in.product_id)
+        # --- FIX: Explicitly check if product exists ---
         if not product:
-            raise HTTPException(status_code=404, detail=f"Product with id {item_in.product_id} not found")
-        
+            raise HTTPException(
+                status_code=404, 
+                detail=f"Product with id {item_in.product_id} not found"
+            )
+        # --- FIX: Check for sufficient stock ---
         if product.stock_quantity < item_in.quantity:
-            raise HTTPException(status_code=400, detail=f"Not enough stock for product {product.name}")
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Not enough stock for product {product.name}. Available: {product.stock_quantity}, Requested: {item_in.quantity}"
+            )
 
         total_amount += product.price * item_in.quantity
 
@@ -54,13 +61,14 @@ def create_order(
     for item_in in order_in.items:
         product = db.get(models.Product, item_in.product_id)
         # This direct manipulation is now handled by stock movements
-        # product.stock_quantity -= item_in.quantity 
+        product.stock_quantity -= item_in.quantity # FIX: Re-enable direct stock deduction
         product.sales += item_in.quantity
         
         order_item = models.OrderItem(
             order_id=db_order.id,
             product_id=product.id,
             quantity=item_in.quantity,
+            price=product.price  # FIX: Added the missing price
         )
         order_items_to_create.append(order_item)
 
