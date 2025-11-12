@@ -1,16 +1,17 @@
 import os
 from fastapi import FastAPI, APIRouter
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import api_router
 from app.web.admin import router as admin_web_router
 from app.api.endpoints import admin as admin_api_router
 
-from fastapi.middleware.cors import CORSMiddleware
-
+# Create the FastAPI app instance first
 app = FastAPI(title="Jinhengtai Mall API")
 
 # --- CORS Middleware ---
+# This should be added before any routes or static files
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Allows all origins
