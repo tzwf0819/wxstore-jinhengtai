@@ -4,6 +4,31 @@
 
 {% block content %}
   <h1>客户管理</h1>
-  <a href="{{ request.url_for('customer_classification') }}" role="button">客户分类设置</a>
-  <a href="{{ request.url_for('customer_merge') }}" role="button">客户账户合并</a>
+  <a href="{{ request.url_for('new_customer_form') }}" role="button">新增客户</a>
+
+  <table>
+    <thead>
+      <tr>
+        <th>客户名称</th>
+        <th>客户类型</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>客户一</td>
+        <td>类型一</td>
+        <td>
+          <a href="#">编辑</a> | <a href="#">删除</a>
+        </td>
+      </tr>
+      <tr>
+        <td>客户二</td>
+        <td>类型二</td>
+        <td>
+          <a href="#">编辑</a> | <a href="#">删除</a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 {% endblock %}

@@ -21,6 +21,12 @@
         <label for="category">分类</label>
         <input type="text" id="category" name="category" value="{{ product.category if product else '' }}">
 
+        <label for="product_type">产品类型</label>
+        <select id="product_type" name="product_type">
+            <option value="standard">标准品</option>
+            <option value="custom">定制品</option>
+        </select>
+
         <label for="image">商品图片 (可选)</label>
         
         <!-- Unified Image Preview Box -->

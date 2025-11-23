@@ -257,6 +257,10 @@ async def customer_classification(request: Request):
 async def customer_merge(request: Request):
     return templates.TemplateResponse("customer_merge.html", {"request": request})
 
+@router.get("/admin/customers/new", response_class=HTMLResponse)
+async def new_customer_form(request: Request):
+    return templates.TemplateResponse("customer_form.html", {"request": request})
+
 # --- Product Management adjunct Routes ---
 @router.get("/admin/products_management", response_class=HTMLResponse)
 async def product_management(request: Request):

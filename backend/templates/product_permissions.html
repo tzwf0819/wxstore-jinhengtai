@@ -1,6 +1,18 @@
 {% extends "base.html" %}
+
 {% block title %}定制品权限分配{% endblock %}
+
 {% block content %}
-<h1>定制品权限分配</h1>
-<p>此页面用于设置“定制品”对客户的可见性。</p>
+<h1>为“定制砂轮A”分配客户权限</h1>
+
+<form>
+  <fieldset>
+    <legend>选择可见客户</legend>
+    <label><input type="checkbox" name="customer" value="1" checked> 客户一 (公司A)</label>
+    <label><input type="checkbox" name="customer" value="2"> 客户二 (公司B)</label>
+    <label><input type="checkbox" name="customer" value="3" checked> 客户三 (公司C)</label>
+    <label><input type="checkbox" name="customer" value="4"> 客户四 (公司D)</label>
+  </fieldset>
+  <button type="submit">保存权限</button>
+</form>
 {% endblock %}
