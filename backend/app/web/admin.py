@@ -243,6 +243,38 @@ async def view_order_web(request: Request, order_id: int, db: Session = Depends(
     return templates.TemplateResponse("order_detail.html", {"request": request, "order": order})
 
 # --- Stock Routes (Read-Only) ---
+
+# --- Customer Management Routes ---
+@router.get("/admin/customers", response_class=HTMLResponse)
+async def customer_management(request: Request):
+    return templates.TemplateResponse("customer_management.html", {"request": request})
+
+@router.get("/admin/customers/classification", response_class=HTMLResponse)
+async def customer_classification(request: Request):
+    return templates.TemplateResponse("customer_classification.html", {"request": request})
+
+@router.get("/admin/customers/merge", response_class=HTMLResponse)
+async def customer_merge(request: Request):
+    return templates.TemplateResponse("customer_merge.html", {"request": request})
+
+# --- Product Management adjunct Routes ---
+@router.get("/admin/products_management", response_class=HTMLResponse)
+async def product_management(request: Request):
+    return templates.TemplateResponse("product_management.html", {"request": request})
+
+@router.get("/admin/products/definition", response_class=HTMLResponse)
+async def product_definition(request: Request):
+    return templates.TemplateResponse("product_definition.html", {"request": request})
+
+@router.get("/admin/products/permissions", response_class=HTMLResponse)
+async def product_permissions(request: Request):
+    return templates.TemplateResponse("product_permissions.html", {"request": request})
+
+@router.get("/admin/products/qrcode", response_class=HTMLResponse)
+async def product_qrcode(request: Request):
+    return templates.TemplateResponse("product_qrcode.html", {"request": request})
+
+
 @router.get("/admin/stock", response_class=HTMLResponse)
 async def list_stock_movements_web(request: Request, db: Session = Depends(deps.get_db)):
     stock_movements = api_stock.list_stock_movements(db=db, skip=0, limit=200)

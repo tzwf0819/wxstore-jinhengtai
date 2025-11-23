@@ -132,7 +132,10 @@
                 <li><strong>锦亨泰商城 Admin</strong></li>
             </ul>
             <ul>
-                <li><a href="{{ request.url_for('list_products_web') }}">商品管理</a></li>
+                <li><a href="{{ request.url_for('list_products_web') }}">商品信息管理</a></li>
+                <li><a href="{{ request.url_for('product_management') }}">商品类型管理</a></li>
+                <li><a href="{{ request.url_for('customer_management') }}">客户管理</a></li>
+
                 <li><a href="{{ request.url_for('list_orders_web') }}">订单管理</a></li>
                 <li><a href="{{ request.url_for('list_categories_web') }}">分类管理</a></li>
                 <li><a href="{{ request.url_for('list_banners_web') }}">轮播图管理</a></li>
